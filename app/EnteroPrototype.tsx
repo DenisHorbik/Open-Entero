@@ -37,6 +37,7 @@ type Stage = {
   number: string;
   selectorTitle: string;
   selectorSubtitle: string;
+  selectorAction: string;
   description: string;
   supporting: string;
   primaryCta: string;
@@ -44,7 +45,6 @@ type Stage = {
   panelTitle: string;
   panelItems: string[];
   panelNote: string;
-  technicalLabels: string[];
   detailTitle: string;
   detailIntro: string;
   detailCta: string;
@@ -59,11 +59,12 @@ const stages: Record<StageId, Stage> = {
     number: "01",
     selectorTitle: "Есть идея",
     selectorSubtitle: "Помещения пока нет",
+    selectorAction: "Прикинуть бюджет",
     description:
-      "Поможем понять, что действительно нужно профессиональной кухне и от чего зависит бюджет.",
-    supporting:
-      "Сначала формат, меню и нагрузка. Потом состав оборудования.",
+      "Поможем понять, что вам действительно нужно для кухни и сколько это будет стоить.",
+    supporting: "",
     primaryCta: "Прикинуть бюджет",
+    secondaryCta: "Как мы работаем",
     panelTitle: "На что влияет бюджет",
     panelItems: [
       "Формат заведения",
@@ -72,8 +73,7 @@ const stages: Record<StageId, Stage> = {
       "Нагрузка кухни",
     ],
     panelNote: "Без выдуманных сумм. Сначала собираем вводные.",
-    technicalLabels: ["ФОРМАТ", "МЕНЮ", "НАГРУЗКА"],
-    detailTitle: "Пока есть идея, начните с экономики",
+    detailTitle: "Если у вас пока только идея, сначала важно понять порядок бюджета",
     detailIntro:
       "До выбора помещения полезно понять масштаб кухни, требования к процессам и порядок инвестиций в оборудование.",
     detailCta: "Получить ориентир по бюджету",
@@ -81,22 +81,22 @@ const stages: Record<StageId, Stage> = {
       {
         icon: "format",
         title: "Формат и концепция",
-        text: "Определяем тип заведения и уровень кухни. От этого зависит всё остальное.",
+        text: "Определяем формат заведения и уровень кухни, от этого зависит всё остальное.",
       },
       {
         icon: "menu",
         title: "Меню и оборудование",
-        text: "Связываем будущие блюда с реальными технологическими процессами.",
+        text: "Понимаем, какие блюда будут в меню и какое оборудование нужно для их приготовления.",
       },
       {
         icon: "seats",
         title: "Посадочные места",
-        text: "Учитываем поток гостей и требуемую производительность кухни.",
+        text: "Количество посадочных мест влияет на поток гостей и потребности кухни и зала.",
       },
       {
         icon: "budget",
         title: "Ориентир бюджета",
-        text: "Формируем реалистичный диапазон и сценарии без ложной точности.",
+        text: "Дадим реалистичный диапазон бюджета и варианты сценариев под ваш проект.",
       },
     ],
   },
@@ -105,11 +105,12 @@ const stages: Record<StageId, Stage> = {
     number: "02",
     selectorTitle: "Есть помещение",
     selectorSubtitle: "Нужен проект и спецификация",
+    selectorAction: "Обсудить проект",
     description:
-      "Спроектируем профессиональную кухню, учтём потоки, мощности и подготовим спецификацию.",
-    supporting:
-      "Ошибки в зонировании и инженерии особенно дорого исправлять после монтажа.",
-    primaryCta: "Пригласить специалиста на объект",
+      "Если помещение уже есть, поможем спроектировать кухню и сформировать спецификацию без дорогих ошибок.",
+    supporting: "",
+    primaryCta: "Обсудить проект",
+    secondaryCta: "Что входит в этап 02",
     panelTitle: "Что проектируем",
     panelItems: [
       "Зоны кухни",
@@ -119,8 +120,7 @@ const stages: Record<StageId, Stage> = {
       "Вентиляция",
     ],
     panelNote: "Начинаем с помещения, меню и ограничений объекта.",
-    technicalLabels: ["ГОРЯЧИЙ ЦЕХ", "МОЕЧНАЯ", "ХОЛОДНЫЙ ЦЕХ"],
-    detailTitle: "Помещение уже есть, спроектируем кухню правильно",
+    detailTitle: "Если помещение уже есть, сначала нужен понятный проект и спецификация",
     detailIntro:
       "Проверяем пространство и инженерные ограничения до того, как оборудование окажется на объекте.",
     detailCta: "Пригласить специалиста на объект",
@@ -128,21 +128,21 @@ const stages: Record<StageId, Stage> = {
       {
         icon: "format",
         title: "Концепция и меню",
-        text: "Фиксируем формат и объёмы, чтобы кухня соответствовала задачам бизнеса.",
+        text: "Понимаем формат и объёмы, чтобы кухня соответствовала вашей концепции и целям.",
       },
       {
         icon: "zones",
         title: "Зонирование",
-        text: "Выстраиваем рабочие зоны и логичные потоки без пересечений.",
+        text: "Выстраиваем логичные потоки и рабочие зоны без пересечений.",
       },
       {
         icon: "engineering",
         title: "Инженерные ограничения",
-        text: "Проверяем вентиляцию, мощности, воду, сливы и конструктив помещения.",
+        text: "Проверяем вентиляцию, электромощности, воду, сливы и несущие конструкции.",
       },
       {
         icon: "specification",
-        title: "Спецификация",
+        title: "Спецификация оборудования",
         text: "Подбираем оборудование по задачам и бюджету, без лишних позиций.",
       },
     ],
@@ -152,20 +152,20 @@ const stages: Record<StageId, Stage> = {
     number: "03",
     selectorTitle: "Есть проект",
     selectorSubtitle: "Нужно подобрать бренды",
+    selectorAction: "Подобрать оборудование",
     description:
-      "Сравним бренды и модели, найдём разумные аналоги и поможем не переплатить.",
+      "Если проект уже есть, поможем подобрать бренды, сравнить варианты и не переплатить за оборудование.",
     supporting:
-      "Учитываем функцию, ресурс, наличие и реальные сроки открытия.",
+      "Берём вашу спецификацию и показываем разумные решения по цене, наличию, срокам и функциональности.",
     primaryCta: "Подобрать оборудование",
     secondaryCta: "Разобрать спецификацию",
     panelTitle: "Сравниваем варианты",
     panelItems: ["Рациональный", "Оптимальный", "Максимальный"],
     panelNote: "Объясняем выбор по функции, ресурсу, цене и срокам.",
-    technicalLabels: ["РАЦИОНАЛЬНЫЙ", "ОПТИМАЛЬНЫЙ", "МАКСИМАЛЬНЫЙ"],
-    detailTitle: "Проект уже есть, соберём разумную комплектацию",
+    detailTitle: "Если проект уже есть, поможем подобрать бренды и собрать разумную комплектацию",
     detailIntro:
       "Проверяем спецификацию и подбираем решения под реальные задачи кухни, а не под один доступный бренд.",
-    detailCta: "Разобрать спецификацию",
+    detailCta: "Отправить спецификацию",
     features: [
       {
         icon: "compare",
@@ -272,19 +272,15 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
           <ScenePicture key={activeId} stage={activeId} state="active" />
           <div className="scene-scrim" aria-hidden="true" />
           <div className="blueprint-grid" aria-hidden="true" />
-          <div className="technical-labels" data-stage={activeId} aria-hidden="true">
-            {active.technicalLabels.map((label) => <span key={label}>{label}</span>)}
-          </div>
-
           <div className="hero-inner">
             <div className="hero-copy" key={`copy-${activeId}`}>
-              <p className="brand-line">ENTERO&nbsp;&nbsp; Оснащение ресторанов</p>
+              <p className="brand-line">ENTERO&nbsp; • &nbsp;Оснащение ресторанов</p>
               <h1 id="hero-title">
                 <span>Открываете</span>
                 <span>ресторан?</span>
               </h1>
               <p className="hero-description">{active.description}</p>
-              <p className="hero-supporting">{active.supporting}</p>
+              {active.supporting && <p className="hero-supporting">{active.supporting}</p>}
               <div className="hero-actions">
                 <a className="button button-primary" href="#stage-detail">
                   <span>{active.primaryCta}</span>
@@ -304,10 +300,6 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
         </div>
 
         <div className="selector-wrap">
-          <div className="selector-intro">
-            <p>Выберите, на каком этапе вы сейчас</p>
-            <span>Покажем следующий разумный шаг</span>
-          </div>
           <div
             className="selector-viewport"
             onPointerDown={(event) => { startX.current = event.clientX; }}
@@ -341,6 +333,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
                     <span className="stage-tab-copy">
                       <strong>{stage.selectorTitle}</strong>
                       <small>{stage.selectorSubtitle}</small>
+                      <em>{stage.selectorAction}</em>
                     </span>
                     <ArrowRight className="stage-arrow" size={22} weight="light" aria-hidden="true" />
                   </button>
@@ -364,12 +357,19 @@ function Header() {
     <header className="header">
       <a className="wordmark" href="#stages" aria-label="ENTERO, начало страницы">ENTERO</a>
       <nav aria-label="Основная навигация">
+        <a href="#stage-detail">Услуги</a>
         <a href="#stages">Этапы</a>
-        <a href="#stage-detail">Подход</a>
+        <a href="#stage-detail">Почему ENTERO</a>
+        <a href="#stage-detail">Контакты</a>
       </nav>
       <div className="experience-mark">
         <ShieldCheck size={25} weight="light" aria-hidden="true" />
         <span>16 лет в профессиональном<br />оснащении HoReCa</span>
+      </div>
+      <div className="menu-mark" aria-hidden="true">
+        <span />
+        <span />
+        <span />
       </div>
     </header>
   );
@@ -394,8 +394,10 @@ function ScenePicture({ stage, state }: { stage: StageId; state: "active" | "lea
 }
 
 function ContextPanel({ stage }: { stage: Stage }) {
+  if (stage.id === "project") return <ComparisonPanel stage={stage} />;
+
   return (
-    <aside className="context-panel" aria-label={stage.panelTitle}>
+    <aside className="context-panel" data-variant="list" aria-label={stage.panelTitle}>
       <div className="context-heading">
         <StageIcon stage={stage.id} />
         <h2>{stage.panelTitle}</h2>
@@ -409,6 +411,43 @@ function ContextPanel({ stage }: { stage: Stage }) {
           </li>
         ))}
       </ul>
+      <p>{stage.panelNote}</p>
+    </aside>
+  );
+}
+
+const comparisonRows = [
+  "Холодильное оборудование",
+  "Тепловое оборудование",
+  "Посудомоечное оборудование",
+  "Вентиляция",
+  "Льдогенераторы",
+  "Кофейное оборудование",
+];
+
+function ComparisonPanel({ stage }: { stage: Stage }) {
+  return (
+    <aside className="context-panel comparison-panel" data-variant="comparison" aria-label={stage.panelTitle}>
+      <div className="comparison-heading">
+        <h2>{stage.panelTitle}</h2>
+        <span aria-hidden="true">i</span>
+      </div>
+      <div className="comparison-columns" aria-hidden="true">
+        <span />
+        <span>Базовый</span>
+        <strong>Оптимальный</strong>
+        <span>Премиум</span>
+      </div>
+      <div className="comparison-table">
+        {comparisonRows.map((item, index) => (
+          <div className="comparison-row" key={item}>
+            <span>{item}</span>
+            <i data-on={index === 0} />
+            <i data-on="optimal" />
+            <i data-on={index > 1 && index < 5} />
+          </div>
+        ))}
+      </div>
       <p>{stage.panelNote}</p>
     </aside>
   );
