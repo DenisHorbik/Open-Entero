@@ -39,6 +39,7 @@ type Stage = {
   selectorSubtitle: string;
   selectorAction: string;
   description: string;
+  mobileDescription: string;
   supporting: string;
   primaryCta: string;
   secondaryCta?: string;
@@ -46,9 +47,10 @@ type Stage = {
   panelItems: string[];
   panelNote: string;
   detailTitle: string;
+  mobileDetailTitle: string;
   detailIntro: string;
   detailCta: string;
-  features: Array<{ icon: FeatureIcon; title: string; text: string }>;
+  features: Array<{ icon: FeatureIcon; title: string; text: string; mobileText: string }>;
 };
 
 const order: StageId[] = ["idea", "space", "project"];
@@ -62,6 +64,7 @@ const stages: Record<StageId, Stage> = {
     selectorAction: "Прикинуть бюджет",
     description:
       "Поможем понять, что вам действительно нужно для кухни и сколько это будет стоить.",
+    mobileDescription: "Поможем понять, какое оборудование нужно кухне и от чего зависит бюджет.",
     supporting: "",
     primaryCta: "Прикинуть бюджет",
     secondaryCta: "Как мы работаем",
@@ -74,6 +77,7 @@ const stages: Record<StageId, Stage> = {
     ],
     panelNote: "Без выдуманных сумм. Сначала собираем вводные.",
     detailTitle: "Если у вас пока только идея, сначала важно понять порядок бюджета",
+    mobileDetailTitle: "Сначала определим формат кухни и порядок бюджета",
     detailIntro:
       "До выбора помещения полезно понять масштаб кухни, требования к процессам и порядок инвестиций в оборудование.",
     detailCta: "Получить ориентир по бюджету",
@@ -82,21 +86,25 @@ const stages: Record<StageId, Stage> = {
         icon: "format",
         title: "Формат и концепция",
         text: "Определяем формат заведения и уровень кухни, от этого зависит всё остальное.",
+        mobileText: "Определим формат заведения и уровень кухни.",
       },
       {
         icon: "menu",
         title: "Меню и оборудование",
         text: "Понимаем, какие блюда будут в меню и какое оборудование нужно для их приготовления.",
+        mobileText: "Свяжем меню с необходимым оборудованием.",
       },
       {
         icon: "seats",
         title: "Посадочные места",
         text: "Количество посадочных мест влияет на поток гостей и потребности кухни и зала.",
+        mobileText: "Учтём поток гостей и нагрузку кухни.",
       },
       {
         icon: "budget",
         title: "Ориентир бюджета",
         text: "Дадим реалистичный диапазон бюджета и варианты сценариев под ваш проект.",
+        mobileText: "Покажем реалистичный порядок бюджета.",
       },
     ],
   },
@@ -108,6 +116,7 @@ const stages: Record<StageId, Stage> = {
     selectorAction: "Обсудить проект",
     description:
       "Если помещение уже есть, поможем спроектировать кухню и сформировать спецификацию без дорогих ошибок.",
+    mobileDescription: "Спроектируем кухню под помещение и подготовим спецификацию без дорогих ошибок.",
     supporting: "",
     primaryCta: "Обсудить проект",
     secondaryCta: "Что входит в этап 02",
@@ -121,6 +130,7 @@ const stages: Record<StageId, Stage> = {
     ],
     panelNote: "Начинаем с помещения, меню и ограничений объекта.",
     detailTitle: "Если помещение уже есть, сначала нужен понятный проект и спецификация",
+    mobileDetailTitle: "Сначала — проект кухни и спецификация",
     detailIntro:
       "Проверяем пространство и инженерные ограничения до того, как оборудование окажется на объекте.",
     detailCta: "Пригласить специалиста на объект",
@@ -129,21 +139,25 @@ const stages: Record<StageId, Stage> = {
         icon: "format",
         title: "Концепция и меню",
         text: "Понимаем формат и объёмы, чтобы кухня соответствовала вашей концепции и целям.",
+        mobileText: "Свяжем формат, меню и объёмы кухни.",
       },
       {
         icon: "zones",
         title: "Зонирование",
         text: "Выстраиваем логичные потоки и рабочие зоны без пересечений.",
+        mobileText: "Выстроим рабочие зоны без пересечений.",
       },
       {
         icon: "engineering",
         title: "Инженерные ограничения",
         text: "Проверяем вентиляцию, электромощности, воду, сливы и несущие конструкции.",
+        mobileText: "Проверим сети и ограничения помещения.",
       },
       {
         icon: "specification",
         title: "Спецификация оборудования",
         text: "Подбираем оборудование по задачам и бюджету, без лишних позиций.",
+        mobileText: "Соберём спецификацию без лишних позиций.",
       },
     ],
   },
@@ -155,6 +169,7 @@ const stages: Record<StageId, Stage> = {
     selectorAction: "Подобрать оборудование",
     description:
       "Если проект уже есть, поможем подобрать бренды, сравнить варианты и не переплатить за оборудование.",
+    mobileDescription: "Сравним оборудование по задаче, цене и срокам — без переплаты.",
     supporting:
       "Берём вашу спецификацию и показываем разумные решения по цене, наличию, срокам и функциональности.",
     primaryCta: "Подобрать оборудование",
@@ -163,6 +178,7 @@ const stages: Record<StageId, Stage> = {
     panelItems: ["Рациональный", "Оптимальный", "Максимальный"],
     panelNote: "Объясняем выбор по функции, ресурсу, цене и срокам.",
     detailTitle: "Если проект уже есть, поможем подобрать бренды и собрать разумную комплектацию",
+    mobileDetailTitle: "Подберём оборудование под задачи проекта",
     detailIntro:
       "Проверяем спецификацию и подбираем решения под реальные задачи кухни, а не под один доступный бренд.",
     detailCta: "Отправить спецификацию",
@@ -171,21 +187,25 @@ const stages: Record<StageId, Stage> = {
         icon: "compare",
         title: "Сравнение вариантов",
         text: "Сопоставляем бренды и модели по ключевым параметрам и стоимости.",
+        mobileText: "Сопоставим модели по ключевым параметрам.",
       },
       {
         icon: "budget",
         title: "Оптимизация бюджета",
         text: "Показываем, где можно сэкономить без потери нужной функции.",
+        mobileText: "Найдём экономию без потери функции.",
       },
       {
         icon: "timing",
         title: "Наличие и сроки",
         text: "Проверяем поставки и риски для запланированной даты открытия.",
+        mobileText: "Проверим наличие и реальные сроки.",
       },
       {
         icon: "solution",
         title: "Подбор под задачу",
         text: "Учитываем концепцию, формат и ожидаемую загрузку ресторана.",
+        mobileText: "Учтём формат и нагрузку ресторана.",
       },
     ],
   },
@@ -199,6 +219,11 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   const [previousId, setPreviousId] = useState<StageId | null>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const startX = useRef<number | null>(null);
+  const startY = useRef<number | null>(null);
+  const startTime = useRef(0);
+  const sceneRef = useRef<HTMLDivElement | null>(null);
+  const gestureActive = useRef(false);
+  const [transitionDirection, setTransitionDirection] = useState<"next" | "previous" | "idle">("idle");
   const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const active = stages[activeId];
 
@@ -220,10 +245,11 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   }, []);
 
   const select = useCallback(
-    (nextId: StageId, focus = false) => {
+    (nextId: StageId, focus = false, direction: "next" | "previous" | "idle" = "idle") => {
       if (nextId === activeId) return;
       if (transitionTimer.current) clearTimeout(transitionTimer.current);
       setPreviousId(activeId);
+      setTransitionDirection(direction);
       setActiveId(nextId);
 
       const url = new URL(window.location.href);
@@ -248,7 +274,61 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
 
   const move = (direction: 1 | -1) => {
     const current = order.indexOf(activeId);
-    select(order[Math.max(0, Math.min(order.length - 1, current + direction))]);
+    const next = Math.max(0, Math.min(order.length - 1, current + direction));
+    if (next === current) return false;
+    select(order[next], false, direction > 0 ? "next" : "previous");
+    return true;
+  };
+
+  const resetSwipe = () => {
+    const scene = sceneRef.current;
+    if (scene) {
+      scene.style.setProperty("--swipe-x", "0px");
+      scene.removeAttribute("data-dragging");
+    }
+    startX.current = null;
+    startY.current = null;
+    gestureActive.current = false;
+  };
+
+  const onScenePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!window.matchMedia("(max-width: 760px)").matches || event.pointerType === "mouse") return;
+    const target = event.target as HTMLElement;
+    if (target.closest("a, button, .context-panel") || event.clientX < 24 || event.clientX > window.innerWidth - 24) return;
+    startX.current = event.clientX;
+    startY.current = event.clientY;
+    startTime.current = performance.now();
+  };
+
+  const onScenePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (startX.current === null || startY.current === null) return;
+    const dx = event.clientX - startX.current;
+    const dy = event.clientY - startY.current;
+    if (!gestureActive.current) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) {
+        resetSwipe();
+        return;
+      }
+      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy) * 1.2) return;
+      gestureActive.current = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      event.currentTarget.setAttribute("data-dragging", "true");
+    }
+    const currentIndex = order.indexOf(activeId);
+    const atEdge = (currentIndex === 0 && dx > 0) || (currentIndex === order.length - 1 && dx < 0);
+    const resistance = atEdge ? 0.22 : 0.72;
+    event.currentTarget.style.setProperty("--swipe-x", `${Math.max(-58, Math.min(58, dx * resistance))}px`);
+  };
+
+  const onScenePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (startX.current === null) return;
+    const dx = event.clientX - startX.current;
+    const elapsed = Math.max(1, performance.now() - startTime.current);
+    const velocity = Math.abs(dx) / elapsed;
+    if (gestureActive.current && (Math.abs(dx) >= 48 || (Math.abs(dx) >= 28 && velocity > 0.5))) {
+      move(dx < 0 ? 1 : -1);
+    }
+    resetSwipe();
   };
 
   const keyNav = (event: React.KeyboardEvent, index: number) => {
@@ -267,7 +347,16 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       <Header />
 
       <section className="hero" id="stages" aria-labelledby="hero-title">
-        <div className="scene" data-stage={activeId}>
+        <div
+          ref={sceneRef}
+          className="scene"
+          data-stage={activeId}
+          data-direction={transitionDirection}
+          onPointerDown={onScenePointerDown}
+          onPointerMove={onScenePointerMove}
+          onPointerUp={onScenePointerUp}
+          onPointerCancel={resetSwipe}
+        >
           {previousId && <ScenePicture stage={previousId} state="leaving" />}
           <ScenePicture key={activeId} stage={activeId} state="active" />
           <div className="scene-scrim" aria-hidden="true" />
@@ -279,8 +368,9 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
                 <span>Открываете</span>
                 <span>ресторан?</span>
               </h1>
-              <p className="hero-description">{active.description}</p>
-              {active.supporting && <p className="hero-supporting">{active.supporting}</p>}
+              <p className="hero-description desktop-copy">{active.description}</p>
+              <p className="hero-description mobile-copy">{active.mobileDescription}</p>
+              {active.supporting && <p className="hero-supporting desktop-copy">{active.supporting}</p>}
               <div className="hero-actions">
                 <a className="button button-primary" href="#stage-detail">
                   <span>{active.primaryCta}</span>
@@ -300,17 +390,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
         </div>
 
         <div className="selector-wrap">
-          <div
-            className="selector-viewport"
-            onPointerDown={(event) => { startX.current = event.clientX; }}
-            onPointerUp={(event) => {
-              if (startX.current === null) return;
-              const distance = event.clientX - startX.current;
-              startX.current = null;
-              if (Math.abs(distance) < 55) return;
-              move(distance < 0 ? 1 : -1);
-            }}
-          >
+          <div className="selector-viewport">
             <div className="stage-tabs" role="tablist" aria-label="Этап открытия ресторана">
               {order.map((id, index) => {
                 const stage = stages[id];
@@ -417,12 +497,12 @@ function ContextPanel({ stage }: { stage: Stage }) {
 }
 
 const comparisonRows = [
-  "Холодильное оборудование",
-  "Тепловое оборудование",
-  "Посудомоечное оборудование",
-  "Вентиляция",
-  "Льдогенераторы",
-  "Кофейное оборудование",
+  { desktop: "Холодильное оборудование", mobile: "Холодильное" },
+  { desktop: "Тепловое оборудование", mobile: "Тепловое" },
+  { desktop: "Нейтральное оборудование", mobile: "Нейтралка" },
+  { desktop: "Барное оборудование", mobile: "Барное" },
+  { desktop: "Посудомоечное оборудование", mobile: "Моечное" },
+  { desktop: "Вентиляция", mobile: "Вентиляция" },
 ];
 
 function ComparisonPanel({ stage }: { stage: Stage }) {
@@ -434,14 +514,15 @@ function ComparisonPanel({ stage }: { stage: Stage }) {
       </div>
       <div className="comparison-columns" aria-hidden="true">
         <span />
-        <span>Базовый</span>
-        <strong>Оптимальный</strong>
-        <span>Премиум</span>
+        <span className="comparison-tier comparison-tier-base">Базовый</span>
+        <strong className="comparison-tier comparison-tier-optimal">Оптимальный</strong>
+        <span className="comparison-tier comparison-tier-premium">Премиум</span>
       </div>
       <div className="comparison-table">
         {comparisonRows.map((item, index) => (
-          <div className="comparison-row" key={item}>
-            <span>{item}</span>
+          <div className="comparison-row" key={item.desktop}>
+            <span className="desktop-copy">{item.desktop}</span>
+            <span className="mobile-copy">{item.mobile}</span>
             <i data-on={index === 0} />
             <i data-on="optimal" />
             <i data-on={index > 1 && index < 5} />
@@ -460,7 +541,7 @@ function StageDetail({ stage }: { stage: Stage }) {
       <div className="detail-inner" key={`detail-${stage.id}`}>
         <p className="detail-stage">ЭТАП {stage.number}</p>
         <div className="detail-heading">
-          <h2>{stage.detailTitle}</h2>
+          <h2><span className="desktop-copy">{stage.detailTitle}</span><span className="mobile-copy">{stage.mobileDetailTitle}</span></h2>
           <p>{stage.detailIntro}</p>
         </div>
         <div className="detail-body">
@@ -470,7 +551,7 @@ function StageDetail({ stage }: { stage: Stage }) {
                 <FeatureIcon name={feature.icon} />
                 <div>
                   <h3>{feature.title}</h3>
-                  <p>{feature.text}</p>
+                  <p><span className="desktop-copy">{feature.text}</span><span className="mobile-copy">{feature.mobileText}</span></p>
                 </div>
               </article>
             ))}
