@@ -221,8 +221,9 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
   const startTime = useRef(0);
-  const sceneRef = useRef<HTMLDivElement | null>(null);
+  const carouselRef = useRef<HTMLDivElement | null>(null);
   const gestureActive = useRef(false);
+  const suppressClick = useRef(false);
   const [transitionDirection, setTransitionDirection] = useState<"next" | "previous" | "idle">("idle");
   const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const active = stages[activeId];
@@ -248,26 +249,23 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
     (nextId: StageId, focus = false, direction: "next" | "previous" | "idle" = "idle") => {
       if (nextId === activeId) return;
       if (transitionTimer.current) clearTimeout(transitionTimer.current);
+      const resolvedDirection = direction === "idle"
+        ? order.indexOf(nextId) > order.indexOf(activeId) ? "next" : "previous"
+        : direction;
       setPreviousId(activeId);
-      setTransitionDirection(direction);
+      setTransitionDirection(resolvedDirection);
       setActiveId(nextId);
 
       const url = new URL(window.location.href);
       url.searchParams.set("stage", nextId);
       window.history.replaceState({}, "", `${url.pathname}${url.search}`);
 
-      transitionTimer.current = setTimeout(() => setPreviousId(null), 620);
+      transitionTimer.current = setTimeout(() => {
+        setPreviousId(null);
+        setTransitionDirection("idle");
+      }, 300);
       const index = order.indexOf(nextId);
-      requestAnimationFrame(() => {
-        tabRefs.current[index]?.scrollIntoView({
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-            ? "auto"
-            : "smooth",
-          block: "nearest",
-          inline: "center",
-        });
-        if (focus) tabRefs.current[index]?.focus();
-      });
+      if (focus) requestAnimationFrame(() => tabRefs.current[index]?.focus());
     },
     [activeId],
   );
@@ -281,54 +279,63 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   };
 
   const resetSwipe = () => {
-    const scene = sceneRef.current;
-    if (scene) {
-      scene.style.setProperty("--swipe-x", "0px");
-      scene.removeAttribute("data-dragging");
+    const carousel = carouselRef.current;
+    if (carousel) {
+      carousel.style.transform = "translate3d(0, 0, 0)";
+      carousel.removeAttribute("data-dragging");
     }
     startX.current = null;
     startY.current = null;
     gestureActive.current = false;
   };
 
-  const onScenePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+  const onCarouselPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!window.matchMedia("(max-width: 760px)").matches || event.pointerType === "mouse") return;
-    const target = event.target as HTMLElement;
-    if (target.closest("a, button, .context-panel") || event.clientX < 24 || event.clientX > window.innerWidth - 24) return;
+    if (event.clientX < 18 || event.clientX > window.innerWidth - 18) return;
+    suppressClick.current = false;
     startX.current = event.clientX;
     startY.current = event.clientY;
     startTime.current = performance.now();
   };
 
-  const onScenePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+  const onCarouselPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (startX.current === null || startY.current === null) return;
     const dx = event.clientX - startX.current;
     const dy = event.clientY - startY.current;
     if (!gestureActive.current) {
-      if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) {
+      if (Math.abs(dy) > 9 && Math.abs(dy) > Math.abs(dx) * 1.15) {
         resetSwipe();
         return;
       }
-      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy) * 1.2) return;
+      if (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(dy) * 0.82) return;
       gestureActive.current = true;
+      suppressClick.current = true;
       event.currentTarget.setPointerCapture(event.pointerId);
       event.currentTarget.setAttribute("data-dragging", "true");
     }
     const currentIndex = order.indexOf(activeId);
     const atEdge = (currentIndex === 0 && dx > 0) || (currentIndex === order.length - 1 && dx < 0);
-    const resistance = atEdge ? 0.22 : 0.72;
-    event.currentTarget.style.setProperty("--swipe-x", `${Math.max(-58, Math.min(58, dx * resistance))}px`);
+    const resistance = atEdge ? 0.2 : 0.92;
+    const offset = Math.max(-96, Math.min(96, dx * resistance));
+    event.currentTarget.style.transform = `translate3d(${offset}px, 0, 0)`;
   };
 
-  const onScenePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+  const onCarouselPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     if (startX.current === null) return;
     const dx = event.clientX - startX.current;
     const elapsed = Math.max(1, performance.now() - startTime.current);
     const velocity = Math.abs(dx) / elapsed;
-    if (gestureActive.current && (Math.abs(dx) >= 48 || (Math.abs(dx) >= 28 && velocity > 0.5))) {
+    if (gestureActive.current && (Math.abs(dx) >= 34 || (Math.abs(dx) >= 20 && velocity > 0.35))) {
       move(dx < 0 ? 1 : -1);
     }
     resetSwipe();
+  };
+
+  const onCarouselClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!suppressClick.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    suppressClick.current = false;
   };
 
   const keyNav = (event: React.KeyboardEvent, index: number) => {
@@ -346,17 +353,18 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
     <main className="site-shell">
       <Header />
 
+      <div
+        ref={carouselRef}
+        className="stage-carousel"
+        data-direction={transitionDirection}
+        onPointerDown={onCarouselPointerDown}
+        onPointerMove={onCarouselPointerMove}
+        onPointerUp={onCarouselPointerUp}
+        onPointerCancel={resetSwipe}
+        onClickCapture={onCarouselClickCapture}
+      >
       <section className="hero" id="stages" aria-labelledby="hero-title">
-        <div
-          ref={sceneRef}
-          className="scene"
-          data-stage={activeId}
-          data-direction={transitionDirection}
-          onPointerDown={onScenePointerDown}
-          onPointerMove={onScenePointerMove}
-          onPointerUp={onScenePointerUp}
-          onPointerCancel={resetSwipe}
-        >
+        <div className="scene" data-stage={activeId} data-direction={transitionDirection}>
           {previousId && <ScenePicture stage={previousId} state="leaving" />}
           <ScenePicture key={activeId} stage={activeId} state="active" />
           <div className="scene-scrim" aria-hidden="true" />
@@ -428,6 +436,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       </section>
 
       <StageDetail stage={active} />
+      </div>
     </main>
   );
 }
