@@ -343,7 +343,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
             },
             { opacity: 1, transform: "translate3d(0, 0, 0) scale(1)" },
           ],
-      { duration: reduceMotion ? 180 : 800, delay: reduceMotion ? 0 : 180 },
+      { duration: reduceMotion ? 180 : 1800, delay: reduceMotion ? 0 : 200 },
       "linear",
     );
 
@@ -352,14 +352,14 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       reduceMotion
         ? [{ opacity: 0 }, { opacity: 0.3 }]
         : [{ opacity: 0 }, { opacity: 0.55 }],
-      { duration: reduceMotion ? 90 : 240 },
+      { duration: reduceMotion ? 90 : 420 },
       "cubic-bezier(0.77, 0, 0.175, 1)",
     );
 
     animate(
       copy,
       [{ opacity: 1 }, { opacity: reduceMotion ? 0.86 : 0.72 }],
-      { duration: reduceMotion ? 90 : 200 },
+      { duration: reduceMotion ? 90 : 360 },
       "cubic-bezier(0.77, 0, 0.175, 1)",
     );
 
@@ -368,7 +368,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
         { opacity: 0, transform: `translate3d(${sign * -120}%, 0, 0) skewX(-10deg)` },
         { opacity: 0.1, offset: 0.52 },
         { opacity: 0, transform: `translate3d(${sign * 120}%, 0, 0) skewX(-10deg)` },
-      ], { duration: 760, delay: 90 });
+      ], { duration: 1500, delay: 260 });
     }
 
     const transitionStage = incomingId;
@@ -408,9 +408,50 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       );
       runningAnimations.current.push(animation);
     };
-    animate(copy, 0.88, 520, 0, 5);
-    animate(panel, 0.88, 570, 40, 5);
-    animate(detail, 0.9, 620, 90, 4);
+    animate(copy, 0.88, 1050, 0, 5);
+
+    panel.style.willChange = "opacity";
+    const panelAnimation = panel.animate(
+      [{ opacity: reduceMotion ? 0.82 : 0.9 }, { opacity: 1 }],
+      {
+        duration: reduceMotion ? 160 : 1200,
+        delay: reduceMotion ? 0 : 70,
+        fill: "both",
+        easing: "cubic-bezier(0.23, 1, 0.32, 1)",
+      },
+    );
+    runningAnimations.current.push(panelAnimation);
+
+    const panelParts = panel.dataset.variant === "comparison"
+      ? Array.from(panel.querySelectorAll<HTMLElement>(
+          ":scope > .comparison-heading, :scope > .comparison-columns, :scope > .comparison-table > .comparison-row, :scope > p",
+        ))
+      : Array.from(panel.querySelectorAll<HTMLElement>(
+          ":scope > .context-heading, :scope > ul > li, :scope > p",
+        ));
+    const stagger = 80;
+    const partDuration = Math.max(900, 1830 - Math.max(0, panelParts.length - 1) * stagger);
+
+    panelParts.forEach((part, index) => {
+      part.style.willChange = "opacity, transform";
+      const partAnimation = part.animate(
+        reduceMotion
+          ? [{ opacity: 0.72 }, { opacity: 1 }]
+          : [
+              { opacity: 0.08, transform: "translate3d(0, 8px, 0)" },
+              { opacity: 1, transform: "translate3d(0, 0, 0)" },
+            ],
+        {
+          duration: reduceMotion ? 160 : partDuration,
+          delay: reduceMotion ? index * 18 : 120 + index * stagger,
+          fill: "both",
+          easing: "cubic-bezier(0.23, 1, 0.32, 1)",
+        },
+      );
+      runningAnimations.current.push(partAnimation);
+    });
+
+    animate(detail, 0.9, 1300, 180, 4);
   }, [activeId, incomingId, transitionDirection]);
 
   const select = useCallback(
