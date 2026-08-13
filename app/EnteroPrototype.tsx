@@ -329,10 +329,22 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       reduceMotion
         ? [{ opacity: 0 }, { opacity: 1 }]
         : [
-            { opacity: 0, transform: `translate3d(${sign * 5}px, 0, 0) scale(1.008)` },
+            {
+              opacity: 0,
+              transform: `translate3d(${sign * 5}px, 0, 0) scale(1.008)`,
+              offset: 0,
+              easing: "cubic-bezier(0.77, 0, 0.175, 1)",
+            },
+            {
+              opacity: 0.78,
+              transform: `translate3d(${sign * 2}px, 0, 0) scale(1.0035)`,
+              offset: 0.62,
+              easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+            },
             { opacity: 1, transform: "translate3d(0, 0, 0) scale(1)" },
           ],
-      { duration: reduceMotion ? 180 : 450, delay: reduceMotion ? 0 : 170 },
+      { duration: reduceMotion ? 180 : 800, delay: reduceMotion ? 0 : 180 },
+      "linear",
     );
 
     animate(
@@ -354,9 +366,9 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
     if (light && !reduceMotion) {
       animate(light, [
         { opacity: 0, transform: `translate3d(${sign * -120}%, 0, 0) skewX(-10deg)` },
-        { opacity: 0.13, offset: 0.48 },
+        { opacity: 0.1, offset: 0.52 },
         { opacity: 0, transform: `translate3d(${sign * 120}%, 0, 0) skewX(-10deg)` },
-      ], { duration: 560, delay: 60 });
+      ], { duration: 760, delay: 90 });
     }
 
     const transitionStage = incomingId;
@@ -396,9 +408,9 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       );
       runningAnimations.current.push(animation);
     };
-    animate(copy, 0.9, 360, 0, 5);
-    animate(panel, 0.9, 380, 40, 5);
-    animate(detail, 0.92, 400, 80, 4);
+    animate(copy, 0.88, 520, 0, 5);
+    animate(panel, 0.88, 570, 40, 5);
+    animate(detail, 0.9, 620, 90, 4);
   }, [activeId, incomingId, transitionDirection]);
 
   const select = useCallback(
