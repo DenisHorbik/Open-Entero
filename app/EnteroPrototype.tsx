@@ -20,6 +20,7 @@ import {
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type StageId = "idea" | "space" | "project";
+type BudgetIcon = "equipment" | "neutral" | "inventory" | "ventilation";
 type FeatureIcon =
   | "format"
   | "menu"
@@ -426,6 +427,10 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       ? Array.from(panel.querySelectorAll<HTMLElement>(
           ":scope > .comparison-heading, :scope > .comparison-columns, :scope > .comparison-table > .comparison-row, :scope > p",
         ))
+      : panel.dataset.variant === "budget"
+        ? Array.from(panel.querySelectorAll<HTMLElement>(
+            ":scope > .context-heading, :scope > .budget-list > .budget-row, :scope > .budget-total",
+          ))
       : Array.from(panel.querySelectorAll<HTMLElement>(
           ":scope > .context-heading, :scope > ul > li, :scope > p",
         ));
@@ -708,6 +713,7 @@ function ScenePicture({ stage, state }: { stage: StageId; state: "active" | "lea
 }
 
 function ContextPanel({ stage }: { stage: Stage }) {
+  if (stage.id === "idea") return <BudgetPanel />;
   if (stage.id === "project") return <ComparisonPanel stage={stage} />;
 
   return (
@@ -726,6 +732,38 @@ function ContextPanel({ stage }: { stage: Stage }) {
         ))}
       </ul>
       <p>{stage.panelNote}</p>
+    </aside>
+  );
+}
+
+const budgetRows: Array<{ label: string; amount: string; icon: BudgetIcon }> = [
+  { label: "Оборудование", amount: "30 000 BYN", icon: "equipment" },
+  { label: "Нейтралка", amount: "8 200 BYN", icon: "neutral" },
+  { label: "Инвентарь", amount: "7 000 BYN", icon: "inventory" },
+  { label: "Вентиляция", amount: "21 000 BYN", icon: "ventilation" },
+];
+
+function BudgetPanel() {
+  return (
+    <aside className="context-panel budget-panel" data-variant="budget" aria-label="Оценка бюджета">
+      <div className="context-heading">
+        <Gauge size={31} weight="light" aria-hidden="true" />
+        <h2>Оценка бюджета</h2>
+        <span aria-hidden="true">i</span>
+      </div>
+      <div className="budget-list">
+        {budgetRows.map((item) => (
+          <div className="budget-row" key={item.label}>
+            <BudgetRowIcon name={item.icon} />
+            <span>{item.label}</span>
+            <strong>{item.amount}</strong>
+          </div>
+        ))}
+      </div>
+      <div className="budget-total">
+        <span>Итого ориентировочно</span>
+        <strong>66 200 BYN</strong>
+      </div>
     </aside>
   );
 }
@@ -829,4 +867,12 @@ function FeatureIcon({ name }: { name: FeatureIcon }) {
   if (name === "timing") return <CalendarBlank {...props} />;
   if (name === "solution") return <Cube {...props} />;
   return <Gauge {...props} />;
+}
+
+function BudgetRowIcon({ name }: { name: BudgetIcon }) {
+  const props = { size: 20, weight: "light" as const, "aria-hidden": true as const };
+  if (name === "equipment") return <ForkKnife {...props} />;
+  if (name === "neutral") return <Cube {...props} />;
+  if (name === "inventory") return <ClipboardText {...props} />;
+  return <Fan {...props} />;
 }
