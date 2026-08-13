@@ -737,7 +737,7 @@ function ContextPanel({ stage }: { stage: Stage }) {
 }
 
 const budgetRows: Array<{ label: string; amount: string; icon: BudgetIcon }> = [
-  { label: "Оборудование", amount: "30 000 BYN", icon: "equipment" },
+  { label: "Оборуд.", amount: "30 000 BYN", icon: "equipment" },
   { label: "Нейтралка", amount: "8 200 BYN", icon: "neutral" },
   { label: "Инвентарь", amount: "7 000 BYN", icon: "inventory" },
   { label: "Вентиляция", amount: "21 000 BYN", icon: "ventilation" },
