@@ -176,26 +176,25 @@ button:focus-visible {
 .scene-picture,
 .scene-picture img,
 .scene-scrim,
-.blueprint-grid {
+.blueprint-grid,
+.scene-transition-light {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
 
-.scene-picture { z-index: -5; }
+.scene-picture {
+  z-index: -5;
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
 .scene-picture[data-state="active"] {
   z-index: -4;
-  animation: sceneEnter 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
-  will-change: opacity, transform, clip-path;
 }
 .scene-picture[data-state="leaving"] {
   z-index: -5;
-  animation: sceneLeave 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
-  will-change: opacity, transform;
 }
-.scene[data-direction="next"] .scene-picture[data-state="active"] { animation-name: sceneRevealNext; }
-.scene[data-direction="previous"] .scene-picture[data-state="active"] { animation-name: sceneRevealPrevious; }
 
 .scene-picture img {
   display: block;
@@ -222,6 +221,16 @@ button:focus-visible {
     linear-gradient(90deg, rgba(214, 165, 91, 0.36) 1px, transparent 1px);
   background-size: 64px 64px;
   mask-image: linear-gradient(90deg, transparent 25%, black 57%, transparent 100%);
+}
+
+.scene-transition-light {
+  z-index: 1;
+  left: 34%;
+  width: 26%;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(231, 189, 124, 0.08) 28%, rgba(231, 189, 124, 0.3) 50%, rgba(231, 189, 124, 0.08) 72%, transparent);
+  mix-blend-mode: screen;
 }
 
 .stage-carousel::after {
@@ -264,17 +273,6 @@ button:focus-visible {
 .hero-copy {
   grid-column: 1;
   max-width: 540px;
-  animation: copyEnter 520ms 80ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.scene[data-direction="next"] .hero-copy,
-.scene[data-direction="next"] .context-panel {
-  animation: interfaceEnterNext 340ms 55ms cubic-bezier(0.23, 1, 0.32, 1) both;
-}
-
-.scene[data-direction="previous"] .hero-copy,
-.scene[data-direction="previous"] .context-panel {
-  animation: interfaceEnterPrevious 340ms 55ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 
 .brand-line,
@@ -370,7 +368,6 @@ button:focus-visible {
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2), inset 0 1px rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  animation: panelEnter 560ms 130ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .context-panel[data-variant="comparison"] {
@@ -614,15 +611,6 @@ button:focus-visible {
   width: min(calc(100% - 88px), 1340px);
   margin: 0 auto;
   padding: 68px 0 78px;
-  animation: detailEnter 540ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.stage-carousel[data-direction="next"] .detail-inner {
-  animation: detailEnterNext 340ms 45ms cubic-bezier(0.23, 1, 0.32, 1) both;
-}
-
-.stage-carousel[data-direction="previous"] .detail-inner {
-  animation: detailEnterPrevious 340ms 45ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 
 .detail-heading {
@@ -723,61 +711,6 @@ button:focus-visible {
   border: 1px solid var(--gold-light);
   background: linear-gradient(110deg, #e0b26d, #b87e3e 62%, #95642f);
   box-shadow: 0 12px 38px rgba(180, 121, 54, 0.2), inset 0 1px rgba(255, 244, 215, 0.4);
-}
-
-@keyframes sceneEnter {
-  from { opacity: 0; transform: scale(1.018); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes sceneLeave {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0.72; transform: scale(1.008); }
-}
-
-@keyframes sceneRevealNext {
-  from { opacity: 0.72; clip-path: inset(0 0 0 100%); transform: scale(1.018); }
-  to { opacity: 1; clip-path: inset(0); transform: scale(1); }
-}
-
-@keyframes sceneRevealPrevious {
-  from { opacity: 0.72; clip-path: inset(0 100% 0 0); transform: scale(1.018); }
-  to { opacity: 1; clip-path: inset(0); transform: scale(1); }
-}
-
-@keyframes interfaceEnterNext {
-  from { opacity: 0; filter: blur(5px); transform: translateX(16px); }
-  to { opacity: 1; filter: blur(0); transform: translateX(0); }
-}
-
-@keyframes interfaceEnterPrevious {
-  from { opacity: 0; filter: blur(5px); transform: translateX(-16px); }
-  to { opacity: 1; filter: blur(0); transform: translateX(0); }
-}
-
-@keyframes detailEnterNext {
-  from { opacity: 0; filter: blur(4px); transform: translateX(12px); }
-  to { opacity: 1; filter: blur(0); transform: translateX(0); }
-}
-
-@keyframes detailEnterPrevious {
-  from { opacity: 0; filter: blur(4px); transform: translateX(-12px); }
-  to { opacity: 1; filter: blur(0); transform: translateX(0); }
-}
-
-@keyframes copyEnter {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes panelEnter {
-  from { opacity: 0; transform: translateX(18px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes detailEnter {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 1040px) {

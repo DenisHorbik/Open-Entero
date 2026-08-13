@@ -17,7 +17,7 @@ import {
   UsersThree,
   Wallet,
 } from "@phosphor-icons/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type StageId = "idea" | "space" | "project";
 type FeatureIcon =
@@ -226,33 +226,157 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   const gestureActive = useRef(false);
   const suppressClick = useRef(false);
   const [transitionDirection, setTransitionDirection] = useState<"next" | "previous" | "idle">("idle");
-  const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const imageCache = useRef(new Map<string, Promise<void>>());
+  const selectionToken = useRef(0);
+  const transitionToken = useRef(0);
+  const runningAnimations = useRef<Animation[]>([]);
   const active = stages[activeId];
+
+  const loadImage = useCallback((url: string) => {
+    const cached = imageCache.current.get(url);
+    if (cached) return cached;
+
+    const pending = new Promise<void>((resolve, reject) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.onload = async () => {
+        try {
+          await image.decode();
+          resolve();
+        } catch {
+          if (image.naturalWidth > 0) resolve();
+          else reject(new Error(`Unable to decode ${url}`));
+        }
+      };
+      image.onerror = () => reject(new Error(`Unable to load ${url}`));
+      image.src = url;
+    }).catch((error) => {
+      imageCache.current.delete(url);
+      throw error;
+    });
+
+    imageCache.current.set(url, pending);
+    return pending;
+  }, []);
+
+  const prepareStageImage = useCallback(async (stage: StageId) => {
+    const viewport = window.matchMedia("(max-width: 700px)").matches ? "mobile" : "desktop";
+    try {
+      await loadImage(`${imagePath(stage, viewport)}.avif`);
+    } catch {
+      await loadImage(`${imagePath(stage, viewport)}.webp`);
+    }
+  }, [loadImage]);
+
+  const finishRunningAnimations = useCallback(() => {
+    for (const animation of runningAnimations.current) {
+      try {
+        animation.finish();
+        animation.cancel();
+      } catch {
+        animation.cancel();
+      }
+    }
+    runningAnimations.current = [];
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const mobile = window.matchMedia("(max-width: 700px)").matches;
-      for (const id of order) {
-        if (id === activeId) continue;
-        const image = new Image();
-        image.decoding = "async";
-        image.src = `${imagePath(id, mobile ? "mobile" : "desktop")}.webp`;
-      }
-    }, 1800);
+      const current = order.indexOf(activeId);
+      const adjacent = [order[current - 1], order[current + 1]].filter(Boolean) as StageId[];
+      for (const id of adjacent) void prepareStageImage(id);
+    }, 500);
     return () => window.clearTimeout(timer);
-  }, [activeId]);
+  }, [activeId, prepareStageImage]);
 
-  useEffect(() => () => {
-    if (transitionTimer.current) clearTimeout(transitionTimer.current);
-  }, []);
+  useEffect(() => () => finishRunningAnimations(), [finishRunningAnimations]);
+
+  useLayoutEffect(() => {
+    if (!previousId || transitionDirection === "idle" || !carouselRef.current) return;
+
+    const root = carouselRef.current;
+    const picture = root.querySelector<HTMLElement>('.scene-picture[data-state="active"]');
+    const copy = root.querySelector<HTMLElement>(".hero-copy");
+    const panel = root.querySelector<HTMLElement>(".context-panel");
+    const detail = root.querySelector<HTMLElement>(".detail-inner");
+    const light = root.querySelector<HTMLElement>(".scene-transition-light");
+    if (!picture || !copy || !panel || !detail) return;
+
+    finishRunningAnimations();
+    const currentTransition = ++transitionToken.current;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const sign = transitionDirection === "next" ? 1 : -1;
+    const easing = "cubic-bezier(0.16, 1, 0.3, 1)";
+    const animate = (
+      element: HTMLElement,
+      keyframes: Keyframe[],
+      options: KeyframeAnimationOptions,
+    ) => {
+      element.style.willChange = "opacity, transform";
+      const animation = element.animate(keyframes, { fill: "both", easing, ...options });
+      runningAnimations.current.push(animation);
+      return animation;
+    };
+
+    const pictureAnimation = animate(
+      picture,
+      reduceMotion
+        ? [{ opacity: 0 }, { opacity: 1 }]
+        : [
+            { opacity: 0, transform: `translate3d(${sign * 8}px, 0, 0) scale(1.012)` },
+            { opacity: 1, transform: "translate3d(0, 0, 0) scale(1)" },
+          ],
+      { duration: reduceMotion ? 180 : 460 },
+    );
+
+    const contentAnimations = [
+      animate(copy, reduceMotion
+        ? [{ opacity: 0.9 }, { opacity: 1 }]
+        : [{ opacity: 0.82, transform: `translate3d(${sign * 7}px, 0, 0)` }, { opacity: 1, transform: "translate3d(0, 0, 0)" }],
+      { duration: reduceMotion ? 160 : 250, delay: reduceMotion ? 0 : 50 }),
+      animate(panel, reduceMotion
+        ? [{ opacity: 0.9 }, { opacity: 1 }]
+        : [{ opacity: 0.84, transform: `translate3d(${sign * 7}px, 0, 0)` }, { opacity: 1, transform: "translate3d(0, 0, 0)" }],
+      { duration: reduceMotion ? 160 : 250, delay: reduceMotion ? 0 : 80 }),
+      animate(detail, reduceMotion
+        ? [{ opacity: 0.92 }, { opacity: 1 }]
+        : [{ opacity: 0.86, transform: `translate3d(${sign * 6}px, 0, 0)` }, { opacity: 1, transform: "translate3d(0, 0, 0)" }],
+      { duration: reduceMotion ? 160 : 250, delay: reduceMotion ? 0 : 110 }),
+    ];
+
+    if (light && !reduceMotion) {
+      animate(light, [
+        { opacity: 0, transform: `translate3d(${sign * -120}%, 0, 0) skewX(-10deg)` },
+        { opacity: 0.18, offset: 0.48 },
+        { opacity: 0, transform: `translate3d(${sign * 120}%, 0, 0) skewX(-10deg)` },
+      ], { duration: 420, delay: 20 });
+    }
+
+    const transitionStage = activeId;
+    void pictureAnimation.finished.then(() => {
+      if (activeId !== transitionStage || transitionToken.current !== currentTransition) return;
+      picture.style.willChange = "";
+      copy.style.willChange = "";
+      panel.style.willChange = "";
+      detail.style.willChange = "";
+      for (const animation of [pictureAnimation, ...contentAnimations]) animation.cancel();
+      runningAnimations.current = runningAnimations.current.filter((animation) => animation.playState !== "idle");
+      setPreviousId(null);
+      setTransitionDirection("idle");
+    }).catch(() => undefined);
+  }, [activeId, finishRunningAnimations, previousId, transitionDirection]);
 
   const select = useCallback(
-    (nextId: StageId, focus = false, direction: "next" | "previous" | "idle" = "idle") => {
+    async (nextId: StageId, focus = false, direction: "next" | "previous" | "idle" = "idle") => {
       if (nextId === activeId) return;
-      if (transitionTimer.current) clearTimeout(transitionTimer.current);
+      const token = ++selectionToken.current;
       const resolvedDirection = direction === "idle"
         ? order.indexOf(nextId) > order.indexOf(activeId) ? "next" : "previous"
         : direction;
+
+      await prepareStageImage(nextId).catch(() => undefined);
+      if (token !== selectionToken.current) return;
+      finishRunningAnimations();
       setPreviousId(activeId);
       setTransitionDirection(resolvedDirection);
       setActiveId(nextId);
@@ -261,21 +385,17 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       url.searchParams.set("stage", nextId);
       window.history.replaceState({}, "", `${url.pathname}${url.search}`);
 
-      transitionTimer.current = setTimeout(() => {
-        setPreviousId(null);
-        setTransitionDirection("idle");
-      }, 460);
       const index = order.indexOf(nextId);
       if (focus) requestAnimationFrame(() => tabRefs.current[index]?.focus());
     },
-    [activeId],
+    [activeId, finishRunningAnimations, prepareStageImage],
   );
 
   const move = (direction: 1 | -1) => {
     const current = order.indexOf(activeId);
     const next = Math.max(0, Math.min(order.length - 1, current + direction));
     if (next === current) return false;
-    select(order[next], false, direction > 0 ? "next" : "previous");
+    void select(order[next], false, direction > 0 ? "next" : "previous");
     return true;
   };
 
@@ -352,7 +472,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
     else if (event.key === "End") next = order.length - 1;
     else return;
     event.preventDefault();
-    select(order[next], true);
+    void select(order[next], true);
   };
 
   return (
@@ -375,6 +495,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
           <ScenePicture key={activeId} stage={activeId} state="active" />
           <div className="scene-scrim" aria-hidden="true" />
           <div className="blueprint-grid" aria-hidden="true" />
+          <div className="scene-transition-light" aria-hidden="true" />
           <div className="hero-inner">
             <div className="hero-copy" key={`copy-${activeId}`}>
               <p className="brand-line">ENTERO&nbsp; • &nbsp;Оснащение ресторанов</p>
@@ -419,7 +540,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
                     tabIndex={selected ? 0 : -1}
                     className="stage-tab"
                     data-active={selected}
-                    onClick={() => select(id)}
+                    onClick={() => void select(id)}
                     onKeyDown={(event) => keyNav(event, index)}
                   >
                     <span className="stage-number">{stage.number}</span>
