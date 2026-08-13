@@ -221,6 +221,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
   const startTime = useRef(0);
+  const activePointerId = useRef<number | null>(null);
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const gestureActive = useRef(false);
   const suppressClick = useRef(false);
@@ -263,7 +264,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       transitionTimer.current = setTimeout(() => {
         setPreviousId(null);
         setTransitionDirection("idle");
-      }, 300);
+      }, 460);
       const index = order.indexOf(nextId);
       if (focus) requestAnimationFrame(() => tabRefs.current[index]?.focus());
     },
@@ -281,25 +282,29 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   const resetSwipe = () => {
     const carousel = carouselRef.current;
     if (carousel) {
-      carousel.style.transform = "translate3d(0, 0, 0)";
+      carousel.style.setProperty("--gesture-progress", "0");
       carousel.removeAttribute("data-dragging");
+      carousel.removeAttribute("data-swipe");
     }
     startX.current = null;
     startY.current = null;
+    activePointerId.current = null;
     gestureActive.current = false;
   };
 
   const onCarouselPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!window.matchMedia("(max-width: 760px)").matches || event.pointerType === "mouse") return;
     if (event.clientX < 18 || event.clientX > window.innerWidth - 18) return;
+    if (activePointerId.current !== null) return;
     suppressClick.current = false;
+    activePointerId.current = event.pointerId;
     startX.current = event.clientX;
     startY.current = event.clientY;
     startTime.current = performance.now();
   };
 
   const onCarouselPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (startX.current === null || startY.current === null) return;
+    if (activePointerId.current !== event.pointerId || startX.current === null || startY.current === null) return;
     const dx = event.clientX - startX.current;
     const dy = event.clientY - startY.current;
     if (!gestureActive.current) {
@@ -315,13 +320,14 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
     }
     const currentIndex = order.indexOf(activeId);
     const atEdge = (currentIndex === 0 && dx > 0) || (currentIndex === order.length - 1 && dx < 0);
-    const resistance = atEdge ? 0.2 : 0.92;
-    const offset = Math.max(-96, Math.min(96, dx * resistance));
-    event.currentTarget.style.transform = `translate3d(${offset}px, 0, 0)`;
+    const resistance = atEdge ? 0.28 : 1;
+    const progress = Math.min(1, Math.abs(dx) * resistance / 72);
+    event.currentTarget.dataset.swipe = dx < 0 ? "next" : "previous";
+    event.currentTarget.style.setProperty("--gesture-progress", progress.toFixed(3));
   };
 
   const onCarouselPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (startX.current === null) return;
+    if (activePointerId.current !== event.pointerId || startX.current === null) return;
     const dx = event.clientX - startX.current;
     const elapsed = Math.max(1, performance.now() - startTime.current);
     const velocity = Math.abs(dx) / elapsed;
