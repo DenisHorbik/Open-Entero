@@ -169,7 +169,7 @@ button:focus-visible {
 .scene {
   position: relative;
   isolation: isolate;
-  min-height: clamp(520px, 39vw, 560px);
+  min-height: clamp(480px, 35vw, 510px);
   overflow: hidden;
 }
 
@@ -567,8 +567,8 @@ button:focus-visible {
   position: relative;
   z-index: 6;
   width: min(calc(100% - 88px), 1340px);
-  margin: 24px auto 0;
-  padding-bottom: 24px;
+  margin: 16px auto 0;
+  padding-bottom: 16px;
 }
 
 .selector-intro {
@@ -848,7 +848,7 @@ button:focus-visible {
     line-height: 0.86;
   }
   .hero-copy h1 span:last-child { margin-left: 0; }
-  .hero-description { max-width: 100%; font-size: 1rem; line-height: 1.45; text-wrap: pretty; }
+  .hero-description { max-width: 100%; font-size: 1rem; line-height: 1.45; text-wrap: pretty; white-space: pre-line; }
   .hero-actions { display: grid; width: 100%; gap: 9px; margin-top: 18px; }
   .button { min-height: 49px; padding: 0 14px; gap: 10px; font-size: 0.875rem; }
   .button-primary { min-width: 0; }
@@ -856,16 +856,17 @@ button:focus-visible {
 
   .context-panel {
     grid-column: 2;
+    align-self: start;
     position: relative;
     right: auto;
     bottom: auto;
     width: 100%;
-    margin: 70px 0 0;
+    margin: 116px 0 0;
     padding: 14px 14px 12px;
     background: linear-gradient(145deg, rgba(31, 31, 28, 0.96), rgba(12, 14, 13, 0.95));
   }
-  .context-panel[data-variant="comparison"] { width: 100%; margin-top: 52px; padding: 13px 10px 11px; }
-  .context-panel[data-variant="budget"] { margin-top: 126px; padding: 10px 9px 9px; }
+  .context-panel[data-variant="comparison"] { width: 100%; margin-top: 116px; padding: 13px 10px 11px; }
+  .context-panel[data-variant="budget"] { margin-top: 116px; padding: 10px 9px 9px; }
   .context-heading { padding-bottom: 10px; }
   .context-heading { grid-template-columns: 24px 1fr 16px; gap: 7px; }
   .context-heading svg { width: 22px; height: 22px; }

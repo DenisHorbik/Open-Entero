@@ -117,10 +117,10 @@ const stages: Record<StageId, Stage> = {
     selectorAction: "Обсудить проект",
     description:
       "Если помещение уже есть, поможем спроектировать кухню и сформировать спецификацию без дорогих ошибок.",
-    mobileDescription: "Спроектируем кухню под помещение и подготовим спецификацию без дорогих ошибок.",
+    mobileDescription: "Расстановка или\nпроект оборудования\nпод Ваше\nпомещение",
     supporting: "",
     primaryCta: "Обсудить проект",
-    secondaryCta: "Что входит в этап 02",
+    secondaryCta: "Что входит в этап",
     panelTitle: "Что проектируем",
     panelItems: [
       "Зоны кухни",
