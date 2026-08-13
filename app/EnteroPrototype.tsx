@@ -768,12 +768,12 @@ function BudgetPanel() {
 }
 
 const comparisonRows = [
-  { desktop: "Холодильное оборудование", mobile: "Холодильное" },
-  { desktop: "Тепловое оборудование", mobile: "Тепловое" },
-  { desktop: "Нейтральное оборудование", mobile: "Нейтралка" },
-  { desktop: "Барное оборудование", mobile: "Барное" },
-  { desktop: "Посудомоечное оборудование", mobile: "Моечное" },
-  { desktop: "Вентиляция", mobile: "Вентиляция" },
+  { id: "cold", desktop: "Холодильное оборудование", mobile: "Холод", base: true, premium: false },
+  { id: "thermal", desktop: "Тепловое оборудование", mobile: "Тепловое", base: false, premium: false },
+  { id: "neutral", desktop: "Нейтральное оборудование", mobile: "Нейтралка", base: false, premium: true },
+  { id: "bar", desktop: "Барное оборудование", mobile: "Барное", base: false, premium: true, hideOnMobile: true },
+  { id: "wash", desktop: "Посудомоечное оборудование", mobile: "Моечное", base: false, premium: true },
+  { id: "ventilation", desktop: "Вентиляция", mobile: "Вентиляция", base: false, premium: false },
 ];
 
 function ComparisonPanel({ stage }: { stage: Stage }) {
@@ -790,13 +790,13 @@ function ComparisonPanel({ stage }: { stage: Stage }) {
         <span className="comparison-tier comparison-tier-premium">Премиум</span>
       </div>
       <div className="comparison-table">
-        {comparisonRows.map((item, index) => (
-          <div className="comparison-row" key={item.desktop}>
+        {comparisonRows.map((item) => (
+          <div className="comparison-row" data-mobile-hidden={item.hideOnMobile || undefined} key={item.id}>
             <span className="desktop-copy">{item.desktop}</span>
             <span className="mobile-copy">{item.mobile}</span>
-            <i data-on={index === 0} />
+            <i data-on={item.base} />
             <i data-on="optimal" />
-            <i data-on={index > 1 && index < 5} />
+            <i data-on={item.premium} />
           </div>
         ))}
       </div>
