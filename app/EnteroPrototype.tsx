@@ -216,7 +216,9 @@ const imagePath = (stage: StageId, viewport: "desktop" | "mobile") =>
 
 export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   const [activeId, setActiveId] = useState<StageId>(initialStage);
-  const [previousId, setPreviousId] = useState<StageId | null>(null);
+  const [requestedId, setRequestedId] = useState<StageId>(initialStage);
+  const [fromId, setFromId] = useState<StageId | null>(null);
+  const [incomingId, setIncomingId] = useState<StageId | null>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
@@ -230,6 +232,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   const selectionToken = useRef(0);
   const transitionToken = useRef(0);
   const runningAnimations = useRef<Animation[]>([]);
+  const contentSwapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const active = stages[activeId];
 
   const loadImage = useCallback((url: string) => {
@@ -269,6 +272,10 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   }, [loadImage]);
 
   const finishRunningAnimations = useCallback(() => {
+    if (contentSwapTimer.current) {
+      clearTimeout(contentSwapTimer.current);
+      contentSwapTimer.current = null;
+    }
     for (const animation of runningAnimations.current) {
       try {
         animation.finish();
@@ -292,25 +299,24 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   useEffect(() => () => finishRunningAnimations(), [finishRunningAnimations]);
 
   useLayoutEffect(() => {
-    if (!previousId || transitionDirection === "idle" || !carouselRef.current) return;
+    if (!fromId || !incomingId || transitionDirection === "idle" || !carouselRef.current) return;
 
     const root = carouselRef.current;
     const picture = root.querySelector<HTMLElement>('.scene-picture[data-state="active"]');
     const copy = root.querySelector<HTMLElement>(".hero-copy");
-    const panel = root.querySelector<HTMLElement>(".context-panel");
-    const detail = root.querySelector<HTMLElement>(".detail-inner");
+    const dim = root.querySelector<HTMLElement>(".scene-transition-dim");
     const light = root.querySelector<HTMLElement>(".scene-transition-light");
-    if (!picture || !copy || !panel || !detail) return;
+    if (!picture || !copy || !dim) return;
 
     finishRunningAnimations();
     const currentTransition = ++transitionToken.current;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const sign = transitionDirection === "next" ? 1 : -1;
-    const easing = "cubic-bezier(0.16, 1, 0.3, 1)";
     const animate = (
       element: HTMLElement,
       keyframes: Keyframe[],
       options: KeyframeAnimationOptions,
+      easing = "cubic-bezier(0.16, 1, 0.3, 1)",
     ) => {
       element.style.willChange = "opacity, transform";
       const animation = element.animate(keyframes, { fill: "both", easing, ...options });
@@ -323,63 +329,101 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       reduceMotion
         ? [{ opacity: 0 }, { opacity: 1 }]
         : [
-            { opacity: 0, transform: `translate3d(${sign * 8}px, 0, 0) scale(1.012)` },
+            { opacity: 0, transform: `translate3d(${sign * 5}px, 0, 0) scale(1.008)` },
             { opacity: 1, transform: "translate3d(0, 0, 0) scale(1)" },
           ],
-      { duration: reduceMotion ? 180 : 460 },
+      { duration: reduceMotion ? 180 : 450, delay: reduceMotion ? 0 : 170 },
     );
 
-    const contentAnimations = [
-      animate(copy, reduceMotion
-        ? [{ opacity: 0.9 }, { opacity: 1 }]
-        : [{ opacity: 0.82, transform: `translate3d(${sign * 7}px, 0, 0)` }, { opacity: 1, transform: "translate3d(0, 0, 0)" }],
-      { duration: reduceMotion ? 160 : 250, delay: reduceMotion ? 0 : 50 }),
-      animate(panel, reduceMotion
-        ? [{ opacity: 0.9 }, { opacity: 1 }]
-        : [{ opacity: 0.84, transform: `translate3d(${sign * 7}px, 0, 0)` }, { opacity: 1, transform: "translate3d(0, 0, 0)" }],
-      { duration: reduceMotion ? 160 : 250, delay: reduceMotion ? 0 : 80 }),
-      animate(detail, reduceMotion
-        ? [{ opacity: 0.92 }, { opacity: 1 }]
-        : [{ opacity: 0.86, transform: `translate3d(${sign * 6}px, 0, 0)` }, { opacity: 1, transform: "translate3d(0, 0, 0)" }],
-      { duration: reduceMotion ? 160 : 250, delay: reduceMotion ? 0 : 110 }),
-    ];
+    animate(
+      dim,
+      reduceMotion
+        ? [{ opacity: 0 }, { opacity: 0.3 }]
+        : [{ opacity: 0 }, { opacity: 0.55 }],
+      { duration: reduceMotion ? 90 : 240 },
+      "cubic-bezier(0.77, 0, 0.175, 1)",
+    );
+
+    animate(
+      copy,
+      [{ opacity: 1 }, { opacity: reduceMotion ? 0.86 : 0.72 }],
+      { duration: reduceMotion ? 90 : 200 },
+      "cubic-bezier(0.77, 0, 0.175, 1)",
+    );
 
     if (light && !reduceMotion) {
       animate(light, [
         { opacity: 0, transform: `translate3d(${sign * -120}%, 0, 0) skewX(-10deg)` },
-        { opacity: 0.18, offset: 0.48 },
+        { opacity: 0.13, offset: 0.48 },
         { opacity: 0, transform: `translate3d(${sign * 120}%, 0, 0) skewX(-10deg)` },
-      ], { duration: 420, delay: 20 });
+      ], { duration: 560, delay: 60 });
     }
 
-    const transitionStage = activeId;
+    const transitionStage = incomingId;
+    contentSwapTimer.current = setTimeout(() => {
+      if (transitionToken.current === currentTransition) setActiveId(transitionStage);
+    }, reduceMotion ? 90 : 210);
+
     void pictureAnimation.finished.then(() => {
-      if (activeId !== transitionStage || transitionToken.current !== currentTransition) return;
+      if (transitionToken.current !== currentTransition) return;
       picture.style.willChange = "";
       copy.style.willChange = "";
-      panel.style.willChange = "";
-      detail.style.willChange = "";
-      for (const animation of [pictureAnimation, ...contentAnimations]) animation.cancel();
-      runningAnimations.current = runningAnimations.current.filter((animation) => animation.playState !== "idle");
-      setPreviousId(null);
+      dim.style.willChange = "";
+      finishRunningAnimations();
+      setActiveId(transitionStage);
+      setFromId(null);
+      setIncomingId(null);
       setTransitionDirection("idle");
     }).catch(() => undefined);
-  }, [activeId, finishRunningAnimations, previousId, transitionDirection]);
+  }, [finishRunningAnimations, fromId, incomingId, transitionDirection]);
+
+  useLayoutEffect(() => {
+    if (transitionDirection === "idle" || !carouselRef.current || activeId !== incomingId) return;
+    const root = carouselRef.current;
+    const copy = root.querySelector<HTMLElement>(".hero-copy");
+    const panel = root.querySelector<HTMLElement>(".context-panel");
+    const detail = root.querySelector<HTMLElement>(".detail-inner");
+    if (!copy || !panel || !detail) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const sign = transitionDirection === "next" ? 1 : -1;
+    const animate = (element: HTMLElement, opacity: number, duration: number, delay: number, offset: number) => {
+      element.style.willChange = "opacity, transform";
+      const animation = element.animate(
+        reduceMotion
+          ? [{ opacity }, { opacity: 1 }]
+          : [{ opacity, transform: `translate3d(${sign * offset}px, 0, 0)` }, { opacity: 1, transform: "translate3d(0, 0, 0)" }],
+        { duration: reduceMotion ? 90 : duration, delay: reduceMotion ? 0 : delay, fill: "both", easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+      );
+      runningAnimations.current.push(animation);
+    };
+    animate(copy, 0.9, 360, 0, 5);
+    animate(panel, 0.9, 380, 40, 5);
+    animate(detail, 0.92, 400, 80, 4);
+  }, [activeId, incomingId, transitionDirection]);
 
   const select = useCallback(
     async (nextId: StageId, focus = false, direction: "next" | "previous" | "idle" = "idle") => {
-      if (nextId === activeId) return;
+      if (nextId === requestedId) return;
       const token = ++selectionToken.current;
+      setRequestedId(nextId);
       const resolvedDirection = direction === "idle"
-        ? order.indexOf(nextId) > order.indexOf(activeId) ? "next" : "previous"
+        ? order.indexOf(nextId) > order.indexOf(requestedId) ? "next" : "previous"
         : direction;
 
-      await prepareStageImage(nextId).catch(() => undefined);
+      try {
+        await prepareStageImage(nextId);
+      } catch {
+        if (token === selectionToken.current) setRequestedId(activeId);
+        return;
+      }
       if (token !== selectionToken.current) return;
+      const transitionFrom = incomingId ?? activeId;
+      transitionToken.current += 1;
       finishRunningAnimations();
-      setPreviousId(activeId);
+      setActiveId(transitionFrom);
+      setFromId(transitionFrom);
+      setIncomingId(nextId);
       setTransitionDirection(resolvedDirection);
-      setActiveId(nextId);
 
       const url = new URL(window.location.href);
       url.searchParams.set("stage", nextId);
@@ -388,11 +432,11 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       const index = order.indexOf(nextId);
       if (focus) requestAnimationFrame(() => tabRefs.current[index]?.focus());
     },
-    [activeId, finishRunningAnimations, prepareStageImage],
+    [activeId, finishRunningAnimations, incomingId, prepareStageImage, requestedId],
   );
 
   const move = (direction: 1 | -1) => {
-    const current = order.indexOf(activeId);
+    const current = order.indexOf(requestedId);
     const next = Math.max(0, Math.min(order.length - 1, current + direction));
     if (next === current) return false;
     void select(order[next], false, direction > 0 ? "next" : "previous");
@@ -491,8 +535,9 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
       >
       <section className="hero" id="stages" aria-labelledby="hero-title">
         <div className="scene" data-stage={activeId} data-direction={transitionDirection}>
-          {previousId && <ScenePicture stage={previousId} state="leaving" />}
-          <ScenePicture key={activeId} stage={activeId} state="active" />
+          {fromId && <ScenePicture stage={fromId} state="leaving" />}
+          <ScenePicture key={incomingId ?? activeId} stage={incomingId ?? activeId} state="active" />
+          <div className="scene-transition-dim" aria-hidden="true" />
           <div className="scene-scrim" aria-hidden="true" />
           <div className="blueprint-grid" aria-hidden="true" />
           <div className="scene-transition-light" aria-hidden="true" />
@@ -529,7 +574,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
             <div className="stage-tabs" role="tablist" aria-label="Этап открытия ресторана">
               {order.map((id, index) => {
                 const stage = stages[id];
-                const selected = id === activeId;
+                const selected = id === requestedId;
                 return (
                   <button
                     key={id}
@@ -557,7 +602,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
             </div>
           </div>
           <div className="mobile-pagination" aria-hidden="true">
-            {order.map((id) => <span key={id} data-active={id === activeId} />)}
+            {order.map((id) => <span key={id} data-active={id === requestedId} />)}
           </div>
         </div>
       </section>
@@ -593,7 +638,7 @@ function Header() {
 
 function ScenePicture({ stage, state }: { stage: StageId; state: "active" | "leaving" }) {
   return (
-    <picture className="scene-picture" data-state={state}>
+    <picture className="scene-picture" data-stage={stage} data-state={state}>
       <source media="(max-width: 700px)" type="image/avif" srcSet={`${imagePath(stage, "mobile")}.avif`} />
       <source media="(max-width: 700px)" type="image/webp" srcSet={`${imagePath(stage, "mobile")}.webp`} />
       <source type="image/avif" srcSet={`${imagePath(stage, "desktop")}.avif`} />
