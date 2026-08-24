@@ -47,6 +47,12 @@ test("Domain.by Node entrypoint serves HTML, assets and stage query state", asyn
     const html = await page.text();
     assert.match(html, /Открываете ресторан/);
     assert.match(html, /Есть проект/);
+    assert.match(html, />Базовый</);
+    assert.match(html, />Экон\.</);
+    assert.match(html, />Премиум</);
+    assert.match(html, />Прем\.</);
+    assert.match(html, /Подробнее о подходе ENTERO к подбору оборудования/);
+    assert.match(html, /где компромиссы недопустимы/);
     const stylesheetPath = html.match(/href="([^"]+\.css)"/)?.[1];
     assert.ok(stylesheetPath, "rendered HTML must include a stylesheet");
     const stylesheet = await fetch(`${origin}${stylesheetPath}`);

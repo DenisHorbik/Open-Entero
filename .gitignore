@@ -39,3 +39,9 @@ yarn-error.log*
 /outputs/
 /work/
 .dev.*.log
+
+# local deployment artifacts and visual scratch files
+/.domainby-release/
+/entero-domainby-node*.zip
+/entero-open-domainby-linux.zip
+/podlozki/

@@ -69,7 +69,7 @@ const stages: Record<StageId, Stage> = {
     supporting: "",
     primaryCta: "Прикинуть бюджет",
     secondaryCta: "Как мы работаем",
-    panelTitle: "На что влияет бюджет",
+    panelTitle: "Что влияет на бюджет",
     panelItems: [
       "Формат заведения",
       "Меню и процессы",
@@ -515,6 +515,10 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
 
   const onCarouselPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!window.matchMedia("(max-width: 760px)").matches || event.pointerType === "mouse") return;
+    if ((event.target as HTMLElement).closest('[data-swipe-ignore="true"], a, button')) {
+      suppressClick.current = false;
+      return;
+    }
     if (event.clientX < 18 || event.clientX > window.innerWidth - 18) return;
     if (activePointerId.current !== null) return;
     suppressClick.current = false;
@@ -777,17 +781,65 @@ const comparisonRows = [
 ];
 
 function ComparisonPanel({ stage }: { stage: Stage }) {
+  const [infoOpen, setInfoOpen] = useState(false);
+  const infoButtonRef = useRef<HTMLButtonElement | null>(null);
+  const infoPopoverRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!infoOpen) return;
+
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (infoButtonRef.current?.contains(target) || infoPopoverRef.current?.contains(target)) return;
+      setInfoOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setInfoOpen(false);
+      infoButtonRef.current?.focus();
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePress);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [infoOpen]);
+
   return (
-    <aside className="context-panel comparison-panel" data-variant="comparison" aria-label={stage.panelTitle}>
+    <aside
+      className="context-panel comparison-panel"
+      data-info-open={infoOpen || undefined}
+      data-swipe-ignore="true"
+      data-variant="comparison"
+      aria-label={stage.panelTitle}
+    >
       <div className="comparison-heading">
         <h2>{stage.panelTitle}</h2>
-        <span aria-hidden="true">i</span>
+        <button
+          ref={infoButtonRef}
+          className="comparison-info-button"
+          type="button"
+          aria-controls="comparison-info-popover"
+          aria-expanded={infoOpen}
+          aria-label="Подробнее о подходе ENTERO к подбору оборудования"
+          onClick={() => setInfoOpen((open) => !open)}
+        >
+          <span aria-hidden="true">i</span>
+        </button>
       </div>
       <div className="comparison-columns" aria-hidden="true">
         <span />
-        <span className="comparison-tier comparison-tier-base">Базовый</span>
+        <span className="comparison-tier comparison-tier-base">
+          <span className="desktop-copy">Базовый</span>
+          <span className="mobile-copy">Экон.</span>
+        </span>
         <strong className="comparison-tier comparison-tier-optimal">Оптимальный</strong>
-        <span className="comparison-tier comparison-tier-premium">Премиум</span>
+        <span className="comparison-tier comparison-tier-premium">
+          <span className="desktop-copy">Премиум</span>
+          <span className="mobile-copy">Прем.</span>
+        </span>
       </div>
       <div className="comparison-table">
         {comparisonRows.map((item) => (
@@ -801,6 +853,18 @@ function ComparisonPanel({ stage }: { stage: Stage }) {
         ))}
       </div>
       <p>{stage.panelNote}</p>
+      <div
+        ref={infoPopoverRef}
+        id="comparison-info-popover"
+        className="comparison-info-popover"
+        data-open={infoOpen || undefined}
+        role="note"
+        aria-hidden={!infoOpen}
+      >
+        <p>
+          Знаем оборудование и подбираем под задачу: где можно упростить, а где компромиссы недопустимы.
+        </p>
+      </div>
     </aside>
   );
 }
