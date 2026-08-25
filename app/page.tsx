@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { EnteroPrototype } from "./EnteroPrototype";
+import type { StageId } from "./entero-content";
 
 export const metadata: Metadata = {
   title: "ENTERO | Открываете ресторан?",
   description:
     "Интерактивный прототип ENTERO для выбора следующего шага в оснащении ресторана.",
 };
-
-type StageId = "idea" | "space" | "project";
 
 function parseStage(value: string | string[] | undefined): StageId {
   const stage = Array.isArray(value) ? value[0] : value;

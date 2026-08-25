@@ -56,6 +56,34 @@ test("Domain.by Node entrypoint serves HTML, assets and stage query state", asyn
     assert.match(html, /Профессиональное оборудование и комплексное оснащение HoReCa в Беларуси/);
     assert.match(html, /\+375 \(44\) 500-29-29/);
     assert.match(html, /ООО «РЕСТОИМПОРТ»/);
+    assert.match(html, /Знаем оборудование, рынок и реальные условия поставки/);
+    assert.match(html, /href="\/services"/);
+    assert.match(html, /href="https:\/\/entero\.by"/);
+
+    const servicesPage = await fetch(`${origin}/services`);
+    assert.equal(servicesPage.status, 200);
+    const servicesHtml = await servicesPage.text();
+    assert.match(servicesHtml, /<title>Услуги ENTERO \| Оснащение HoReCa<\/title>/);
+    assert.match(servicesHtml, /Помогаем пройти путь от идеи и бюджета/);
+    for (const heading of [
+      "Формат и концепция",
+      "Меню и оборудование",
+      "Посадочные места",
+      "Ориентир бюджета",
+      "Концепция и меню",
+      "Зонирование",
+      "Инженерные ограничения",
+      "Спецификация оборудования",
+      "Сравнение вариантов",
+      "Оптимизация бюджета",
+      "Наличие и сроки",
+      "Подбор под задачу",
+    ]) {
+      assert.match(servicesHtml, new RegExp(heading));
+    }
+    assert.match(servicesHtml, /href="\/\?stage=idea#stage-detail"/);
+    assert.match(servicesHtml, /href="\/\?stage=space#stage-detail"/);
+    assert.match(servicesHtml, /href="\/\?stage=project#stage-detail"/);
     const stylesheetPath = html.match(/href="([^"]+\.css)"/)?.[1];
     assert.ok(stylesheetPath, "rendered HTML must include a stylesheet");
     const stylesheet = await fetch(`${origin}${stylesheetPath}`);

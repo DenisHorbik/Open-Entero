@@ -12,207 +12,23 @@ import {
   Gauge,
   Lightbulb,
   Scales,
-  ShieldCheck,
   SquaresFour,
   UsersThree,
   Wallet,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-
-type StageId = "idea" | "space" | "project";
-type BudgetIcon = "equipment" | "neutral" | "inventory" | "ventilation";
-type FeatureIcon =
-  | "format"
-  | "menu"
-  | "seats"
-  | "budget"
-  | "zones"
-  | "engineering"
-  | "specification"
-  | "compare"
-  | "timing"
-  | "solution";
-
-type Stage = {
-  id: StageId;
-  number: string;
-  selectorTitle: string;
-  selectorSubtitle: string;
-  selectorAction: string;
-  description: string;
-  mobileDescription: string;
-  supporting: string;
-  primaryCta: string;
-  secondaryCta?: string;
-  panelTitle: string;
-  panelItems: string[];
-  panelNote: string;
-  detailTitle: string;
-  mobileDetailTitle: string;
-  detailIntro: string;
-  detailCta: string;
-  features: Array<{ icon: FeatureIcon; title: string; text: string; mobileText: string }>;
-};
-
-const order: StageId[] = ["idea", "space", "project"];
-
-const stages: Record<StageId, Stage> = {
-  idea: {
-    id: "idea",
-    number: "01",
-    selectorTitle: "Есть идея",
-    selectorSubtitle: "Помещения пока нет",
-    selectorAction: "Прикинуть бюджет",
-    description:
-      "Поможем определить состав оборудования и понять, от чего зависит бюджет профессиональной кухни.",
-    mobileDescription: "Поможем понять, какое оборудование нужно кухне и от чего зависит бюджет.",
-    supporting: "",
-    primaryCta: "Прикинуть бюджет",
-    secondaryCta: "Как мы работаем",
-    panelTitle: "Что влияет на бюджет",
-    panelItems: [
-      "Формат заведения",
-      "Меню и процессы",
-      "Количество мест",
-      "Нагрузка кухни",
-    ],
-    panelNote: "Без выдуманных сумм. Сначала собираем вводные.",
-    detailTitle: "Если у вас пока только идея, сначала важно понять порядок бюджета",
-    mobileDetailTitle: "Сначала определим формат кухни и порядок бюджета",
-    detailIntro:
-      "До выбора помещения полезно понять масштаб кухни, требования к процессам и порядок инвестиций в оборудование.",
-    detailCta: "Получить ориентир по бюджету",
-    features: [
-      {
-        icon: "format",
-        title: "Формат и концепция",
-        text: "Определяем формат заведения и уровень кухни, от этого зависит всё остальное.",
-        mobileText: "Определим формат заведения и уровень кухни.",
-      },
-      {
-        icon: "menu",
-        title: "Меню и оборудование",
-        text: "Понимаем, какие блюда будут в меню и какое оборудование нужно для их приготовления.",
-        mobileText: "Свяжем меню с необходимым оборудованием.",
-      },
-      {
-        icon: "seats",
-        title: "Посадочные места",
-        text: "Количество посадочных мест влияет на поток гостей и потребности кухни и зала.",
-        mobileText: "Учтём поток гостей и нагрузку кухни.",
-      },
-      {
-        icon: "budget",
-        title: "Ориентир бюджета",
-        text: "Дадим реалистичный диапазон бюджета и варианты сценариев под ваш проект.",
-        mobileText: "Покажем реалистичный порядок бюджета.",
-      },
-    ],
-  },
-  space: {
-    id: "space",
-    number: "02",
-    selectorTitle: "Есть помещение",
-    selectorSubtitle: "Нужен проект и спецификация",
-    selectorAction: "Обсудить проект",
-    description:
-      "Спроектируем кухню под ваше помещение и подготовим спецификацию оборудования без дорогих ошибок.",
-    mobileDescription: "Расстановка или\nпроект оборудования\nпод Ваше\nпомещение",
-    supporting: "",
-    primaryCta: "Обсудить проект",
-    secondaryCta: "Что входит в этап",
-    panelTitle: "Что проектируем",
-    panelItems: [
-      "Зоны кухни",
-      "Технология",
-      "Спецификация",
-      "Мощности",
-      "Вентиляция",
-    ],
-    panelNote: "Начинаем с помещения, меню и ограничений объекта.",
-    detailTitle: "Если помещение уже есть, сначала нужен понятный проект и спецификация",
-    mobileDetailTitle: "Сначала — проект кухни и спецификация",
-    detailIntro:
-      "Проверяем пространство и инженерные ограничения до того, как оборудование окажется на объекте.",
-    detailCta: "Пригласить специалиста на объект",
-    features: [
-      {
-        icon: "format",
-        title: "Концепция и меню",
-        text: "Понимаем формат и объёмы, чтобы кухня соответствовала вашей концепции и целям.",
-        mobileText: "Свяжем формат, меню и объёмы кухни.",
-      },
-      {
-        icon: "zones",
-        title: "Зонирование",
-        text: "Выстраиваем логичные потоки и рабочие зоны без пересечений.",
-        mobileText: "Выстроим рабочие зоны без пересечений.",
-      },
-      {
-        icon: "engineering",
-        title: "Инженерные ограничения",
-        text: "Проверяем вентиляцию, электромощности, воду, сливы и несущие конструкции.",
-        mobileText: "Проверим сети и ограничения помещения.",
-      },
-      {
-        icon: "specification",
-        title: "Спецификация оборудования",
-        text: "Подбираем оборудование по задачам и бюджету, без лишних позиций.",
-        mobileText: "Соберём спецификацию без лишних позиций.",
-      },
-    ],
-  },
-  project: {
-    id: "project",
-    number: "03",
-    selectorTitle: "Есть проект",
-    selectorSubtitle: "Нужно подобрать бренды",
-    selectorAction: "Подобрать оборудование",
-    description:
-      "Сравним оборудование по задачам, цене и срокам, чтобы подобрать решение без лишней переплаты.",
-    mobileDescription: "Сравним оборудование по задаче, цене и срокам — без переплаты.",
-    supporting: "",
-    primaryCta: "Подобрать оборудование",
-    secondaryCta: "Разобрать спецификацию",
-    panelTitle: "Сравниваем варианты",
-    panelItems: ["Рациональный", "Оптимальный", "Максимальный"],
-    panelNote: "Объясняем выбор по функции, ресурсу, цене и срокам.",
-    detailTitle: "Если проект уже есть, поможем подобрать бренды и собрать разумную комплектацию",
-    mobileDetailTitle: "Подберём оборудование под задачи проекта",
-    detailIntro:
-      "Проверяем спецификацию и подбираем решения под реальные задачи кухни, а не под один доступный бренд.",
-    detailCta: "Отправить спецификацию",
-    features: [
-      {
-        icon: "compare",
-        title: "Сравнение вариантов",
-        text: "Сопоставляем бренды и модели по ключевым параметрам и стоимости.",
-        mobileText: "Сопоставим модели по ключевым параметрам.",
-      },
-      {
-        icon: "budget",
-        title: "Оптимизация бюджета",
-        text: "Показываем, где можно сэкономить без потери нужной функции.",
-        mobileText: "Найдём экономию без потери функции.",
-      },
-      {
-        icon: "timing",
-        title: "Наличие и сроки",
-        text: "Проверяем поставки и риски для запланированной даты открытия.",
-        mobileText: "Проверим наличие и реальные сроки.",
-      },
-      {
-        icon: "solution",
-        title: "Подбор под задачу",
-        text: "Учитываем концепцию, формат и ожидаемую загрузку ресторана.",
-        mobileText: "Учтём формат и нагрузку ресторана.",
-      },
-    ],
-  },
-};
-
-const imagePath = (stage: StageId, viewport: "desktop" | "mobile") =>
-  `/media/hero/${stage}-${viewport}`;
+import {
+  imagePath,
+  stageOrder as order,
+  stages,
+  type BudgetIcon,
+  type FeatureIconName,
+  type Stage,
+  type StageId,
+} from "./entero-content";
+import { SiteFooter } from "./SiteFooter";
+import { SiteHeader } from "./SiteHeader";
+import { WhyEntero } from "./WhyEntero";
 
 export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   const [activeId, setActiveId] = useState<StageId>(initialStage);
@@ -582,7 +398,7 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
 
   return (
     <main className="site-shell">
-      <Header />
+      <SiteHeader />
 
       <div
         ref={carouselRef}
@@ -670,78 +486,9 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
 
       <StageDetail stage={active} />
       </div>
+      <WhyEntero />
       <SiteFooter />
     </main>
-  );
-}
-
-function Header() {
-  return (
-    <header className="header">
-      <a className="wordmark" href="#stages" aria-label="ENTERO, начало страницы">ENTERO</a>
-      <nav aria-label="Основная навигация">
-        <a href="#stage-detail">Услуги</a>
-        <a href="#stages">Этапы</a>
-        <a href="#stage-detail">Почему ENTERO</a>
-        <a href="#contacts">Контакты</a>
-      </nav>
-      <div className="experience-mark">
-        <ShieldCheck size={25} weight="light" aria-hidden="true" />
-        <span>16 лет в профессиональном<br />оснащении HoReCa</span>
-      </div>
-      <div className="menu-mark" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
-    </header>
-  );
-}
-
-function SiteFooter() {
-  return (
-    <footer className="site-footer" id="contacts">
-      <div className="footer-main">
-        <div className="footer-brand">
-          <a className="footer-wordmark" href="#stages" aria-label="ENTERO, начало страницы">ENTERO</a>
-          <p>Профессиональное оборудование и комплексное оснащение HoReCa в Беларуси.</p>
-        </div>
-
-        <div className="footer-column footer-contacts">
-          <h2>Связаться</h2>
-          <a href="tel:+375445002929">+375 (44) 500-29-29</a>
-          <a href="mailto:info@entero.by">info@entero.by</a>
-          <p>Пн-Пт, 9:00-18:00</p>
-        </div>
-
-        <div className="footer-column footer-company">
-          <h2>Компания</h2>
-          <a href="https://entero.by" target="_blank" rel="noreferrer">Каталог entero.by</a>
-          <nav className="footer-socials" aria-label="Мессенджеры ENTERO">
-            <a
-              href="https://t.me/EnteroMinsk"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Открыть Telegram ENTERO"
-            >
-              Telegram
-            </a>
-            <a
-              href="viber://chat?number=%2B375445002929"
-              aria-label="Открыть Viber ENTERO"
-            >
-              Viber
-            </a>
-          </nav>
-          <p>Минск, ул. Макаёнка, 12Г</p>
-        </div>
-      </div>
-
-      <div className="footer-legal">
-        <span>© 2005-2026 ENTERO</span>
-        <span>ООО «РЕСТОИМПОРТ» · УНП 193793677</span>
-      </div>
-    </footer>
   );
 }
 
@@ -968,7 +715,7 @@ function StageIcon({ stage }: { stage: StageId }) {
   return <ClipboardText {...props} />;
 }
 
-function FeatureIcon({ name }: { name: FeatureIcon }) {
+function FeatureIcon({ name }: { name: FeatureIconName }) {
   const props = { size: 31, weight: "light" as const, "aria-hidden": true as const };
   if (name === "format") return <SquaresFour {...props} />;
   if (name === "menu") return <ForkKnife {...props} />;
