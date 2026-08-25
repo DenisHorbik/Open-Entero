@@ -717,7 +717,22 @@ function SiteFooter() {
         <div className="footer-column footer-company">
           <h2>Компания</h2>
           <a href="https://entero.by" target="_blank" rel="noreferrer">Каталог entero.by</a>
-          <a href="https://t.me/entero_ru" target="_blank" rel="noreferrer">Telegram</a>
+          <nav className="footer-socials" aria-label="Мессенджеры ENTERO">
+            <a
+              href="https://t.me/EnteroMinsk"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Открыть Telegram ENTERO"
+            >
+              Telegram
+            </a>
+            <a
+              href="viber://chat?number=%2B375445002929"
+              aria-label="Открыть Viber ENTERO"
+            >
+              Viber
+            </a>
+          </nav>
           <p>Минск, ул. Макаёнка, 12Г</p>
         </div>
       </div>

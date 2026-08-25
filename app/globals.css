@@ -970,6 +970,12 @@ button:focus-visible {
   line-height: 1.5;
 }
 
+.footer-socials {
+  display: flex;
+  align-items: center;
+  gap: 0.85em;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .footer-wordmark:hover { color: var(--gold-light); }
   .footer-column a:hover {
@@ -1233,8 +1239,8 @@ button:focus-visible {
     padding: 48px 0 38px;
   }
   .footer-brand { grid-column: 1 / -1; max-width: 100%; }
-  .footer-wordmark { font-size: 1.5rem; }
-  .footer-brand p { max-width: 35ch; margin-top: 18px; font-size: 0.88rem; }
+  .footer-wordmark { font-size: 1.05rem; }
+  .footer-brand p { max-width: 35ch; margin-top: 18px; font-size: 0.75rem; }
   .footer-column { gap: 11px; }
   .footer-column h2 { margin-bottom: 6px; font-size: 0.67rem; }
   .footer-column a { font-size: 0.82rem; }
