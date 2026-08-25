@@ -714,7 +714,7 @@ button:focus-visible {
   align-self: start;
   color: var(--gold-light);
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 1.2rem;
 }
 
 .stage-tab > svg:not(.stage-arrow) { color: var(--gold); }
@@ -724,12 +724,12 @@ button:focus-visible {
   gap: 7px;
 }
 
-.stage-tab-copy strong { font-size: 0.9rem; font-weight: 500; }
-.stage-tab-copy small { color: var(--muted); font-size: 0.69rem; line-height: 1.42; }
+.stage-tab-copy strong { font-size: 1.08rem; font-weight: 500; }
+.stage-tab-copy small { color: var(--muted); font-size: 0.83rem; line-height: 1.42; }
 .stage-tab-copy em {
   margin-top: 3px;
   color: var(--gold-light);
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   font-style: normal;
 }
 .stage-arrow { align-self: end; color: var(--gold); }
@@ -738,10 +738,10 @@ button:focus-visible {
 @media (min-width: 761px) {
   .hero-copy h1 { line-height: 0.88; }
 
-  .stage-number { font-size: clamp(1.08rem, 1.35vw, 1.2rem); }
-  .stage-tab-copy strong { font-size: clamp(0.96rem, 1.2vw, 1.08rem); line-height: 1.2; }
-  .stage-tab-copy small { font-size: clamp(0.74rem, 0.92vw, 0.83rem); line-height: 1.32; }
-  .stage-tab-copy em { font-size: clamp(0.7rem, 0.87vw, 0.78rem); line-height: 1.2; }
+  .stage-number { font-size: clamp(1.3rem, 1.62vw, 1.44rem); }
+  .stage-tab-copy strong { font-size: clamp(1.15rem, 1.44vw, 1.3rem); line-height: 1.2; }
+  .stage-tab-copy small { font-size: clamp(0.89rem, 1.1vw, 1rem); line-height: 1.32; }
+  .stage-tab-copy em { font-size: clamp(0.84rem, 1.04vw, 0.94rem); line-height: 1.2; }
 
   .context-panel[data-variant="list"] .context-heading h2,
   .comparison-heading h2 { font-size: 1.12rem; }
@@ -1200,8 +1200,8 @@ button:focus-visible {
   }
   .stage-tab > svg:not(.stage-arrow) { width: 26px; height: 26px; margin: 12px 0 10px; }
   .stage-tab-copy { gap: 5px; }
-  .stage-tab-copy strong { font-size: 0.67rem; }
-  .stage-tab-copy small { font-size: 0.52rem; line-height: 1.35; }
+  .stage-tab-copy strong { font-size: 0.8rem; }
+  .stage-tab-copy small { font-size: 0.625rem; line-height: 1.35; }
   .stage-tab-copy em { display: none; }
   .stage-arrow { position: absolute; right: 9px; bottom: 10px; width: 19px; }
   .mobile-pagination {
