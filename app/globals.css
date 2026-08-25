@@ -809,14 +809,14 @@ button:focus-visible {
 
 .detail-heading {
   display: block;
-  margin-top: 12px;
+  margin-top: 6px;
 }
 
 .detail-heading h2 {
   max-width: 850px;
   margin: 0;
   font-family: var(--font-ui);
-  font-size: clamp(2.4rem, 3.2vw, 3.25rem);
+  font-size: clamp(1.68rem, 2.24vw, 2.28rem);
   font-weight: 400;
   letter-spacing: -0.035em;
   line-height: 0.98;
@@ -831,7 +831,7 @@ button:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1.16fr) minmax(410px, 0.84fr);
   gap: clamp(36px, 5vw, 76px);
-  margin-top: 44px;
+  margin-top: 22px;
 }
 
 .feature-list {
@@ -1221,10 +1221,10 @@ button:focus-visible {
 
   .detail-inner { width: calc(100% - 36px); padding: 54px 0 64px; }
   .detail-stage { font-size: 0.8rem; }
-  .detail-heading { display: block; margin-top: 10px; }
-  .detail-heading h2 { max-width: 98%; font-size: clamp(2.25rem, 10.5vw, 3rem); line-height: 0.98; }
+  .detail-heading { display: block; margin-top: 5px; }
+  .detail-heading h2 { max-width: 98%; font-size: clamp(1.58rem, 7.35vw, 2.1rem); line-height: 0.98; }
   .detail-heading p { display: none; }
-  .detail-body { position: relative; display: block; min-height: 500px; margin-top: 28px; }
+  .detail-body { position: relative; display: block; min-height: 500px; margin-top: 14px; }
   .feature-list {
     position: relative;
     z-index: 2;
@@ -1294,7 +1294,7 @@ button:focus-visible {
   .selector-intro { width: calc(100% - 28px); }
   .stage-tab { width: 100%; padding-inline: 8px; }
   .detail-inner { width: calc(100% - 28px); }
-  .detail-heading h2 { font-size: 2.5rem; }
+  .detail-heading h2 { font-size: 1.75rem; }
   .feature-list { width: 82%; }
   .footer-main,
   .footer-legal { width: calc(100% - 28px); }
