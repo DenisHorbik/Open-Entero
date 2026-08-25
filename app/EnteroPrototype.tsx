@@ -922,7 +922,10 @@ function StageDetail({ stage }: { stage: Stage }) {
     <section className="stage-detail" id="stage-detail" data-stage={stage.id}>
       <div className="detail-blueprint" aria-hidden="true" />
       <div className="detail-inner" key={`detail-${stage.id}`}>
-        <p className="detail-stage">ЭТАП {stage.number}</p>
+        <p className="detail-stage">
+          <span>ЭТАП</span>
+          <strong>{stage.number}</strong>
+        </p>
         <div className="detail-heading">
           <h2><span className="desktop-copy">{stage.detailTitle}</span><span className="mobile-copy">{stage.mobileDetailTitle}</span></h2>
           <p>{stage.detailIntro}</p>

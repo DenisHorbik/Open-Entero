@@ -295,6 +295,18 @@ button:focus-visible {
   letter-spacing: 0.04em;
 }
 
+.detail-stage {
+  display: flex;
+  gap: 0.34em;
+  align-items: baseline;
+  font-size: 1.235rem;
+}
+
+.detail-stage strong {
+  font-size: 1.2em;
+  font-weight: 400;
+}
+
 .hero-copy h1 {
   display: grid;
   margin: 16px 0 26px;
@@ -804,7 +816,7 @@ button:focus-visible {
 .detail-inner {
   width: min(calc(100% - 88px), 1340px);
   margin: 0 auto;
-  padding: 68px 0 78px;
+  padding: 34px 0 78px;
 }
 
 .detail-heading {
@@ -1219,8 +1231,8 @@ button:focus-visible {
   }
   .mobile-pagination span[data-active="true"] { background: var(--gold-light); transform: scale(1.25); }
 
-  .detail-inner { width: calc(100% - 36px); padding: 54px 0 64px; }
-  .detail-stage { font-size: 0.8rem; }
+  .detail-inner { width: calc(100% - 36px); padding: 27px 0 64px; }
+  .detail-stage { font-size: 1.04rem; }
   .detail-heading { display: block; margin-top: 5px; }
   .detail-heading h2 { max-width: 98%; font-size: clamp(1.58rem, 7.35vw, 2.1rem); line-height: 0.98; }
   .detail-heading p { display: none; }
