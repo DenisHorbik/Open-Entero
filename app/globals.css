@@ -309,6 +309,7 @@ button:focus-visible {
 
 .hero-copy h1 {
   display: grid;
+  row-gap: 0.175em;
   margin: 16px 0 26px;
   font-family: var(--font-ui);
   font-size: clamp(3.05rem, 3.87vw, 3.7rem);
