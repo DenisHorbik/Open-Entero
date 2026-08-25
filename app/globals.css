@@ -748,7 +748,17 @@ button:focus-visible {
 
   .comparison-columns,
   .comparison-row { grid-template-columns: minmax(140px, 1fr) repeat(3, 48px); }
-  .comparison-columns { font-size: 0.68rem; }
+  .comparison-columns {
+    grid-template-rows: 17px 17px;
+    min-height: 38px;
+    font-size: 0.68rem;
+    line-height: 1.08;
+  }
+  .comparison-columns > :first-child { grid-row: 1 / span 2; }
+  .comparison-tier { align-self: center; justify-self: center; white-space: nowrap; }
+  .comparison-tier-base { grid-column: 2; grid-row: 2; }
+  .comparison-tier-optimal { grid-column: 3; grid-row: 1; }
+  .comparison-tier-premium { grid-column: 4; grid-row: 2; }
   .comparison-row { font-size: 0.78rem; }
 }
 
