@@ -815,7 +815,7 @@ button:focus-visible {
 .detail-heading h2 {
   max-width: 850px;
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: clamp(2.4rem, 3.2vw, 3.25rem);
   font-weight: 400;
   letter-spacing: -0.035em;
