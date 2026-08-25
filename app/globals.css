@@ -298,10 +298,10 @@ button:focus-visible {
 .hero-copy h1 {
   display: grid;
   margin: 16px 0 26px;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: clamp(4.6rem, 5.8vw, 5.55rem);
   font-weight: 400;
-  letter-spacing: -0.052em;
+  letter-spacing: -0.04em;
   line-height: 0.8;
 }
 
@@ -736,6 +736,8 @@ button:focus-visible {
 .mobile-pagination { display: none; }
 
 @media (min-width: 761px) {
+  .hero-copy h1 { line-height: 0.88; }
+
   .stage-number { font-size: clamp(1.08rem, 1.35vw, 1.2rem); }
   .stage-tab-copy strong { font-size: clamp(0.96rem, 1.2vw, 1.08rem); line-height: 1.2; }
   .stage-tab-copy small { font-size: clamp(0.74rem, 0.92vw, 0.83rem); line-height: 1.32; }
@@ -848,6 +850,20 @@ button:focus-visible {
 .feature-list svg { color: var(--gold); }
 .feature-list h3 { margin: 13px 0 6px; font-size: 0.82rem; font-weight: 500; }
 .feature-list p { margin: 0; color: var(--muted); font-size: 0.71rem; line-height: 1.52; }
+
+@media (min-width: 761px) {
+  .feature-list { gap: clamp(22px, 1.8vw, 26px); }
+  .feature-list article { min-height: 180px; padding-top: 12px; }
+  .feature-list svg { width: 37px; height: 37px; }
+  .feature-list h3 {
+    margin: 16px 0 7px;
+    font-size: clamp(0.9rem, 1.1vw, 0.98rem);
+  }
+  .feature-list p {
+    font-size: clamp(0.78rem, 0.95vw, 0.85rem);
+    line-height: 1.52;
+  }
+}
 
 .editorial-board {
   position: relative;
