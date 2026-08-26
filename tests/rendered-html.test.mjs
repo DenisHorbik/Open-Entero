@@ -34,6 +34,7 @@ test("server-renders all ENTERO home stages with shared navigation and why secti
     assert.match(html, /href="\/services"/);
     assert.match(html, /Каталог Entero/);
     assert.match(html, /Почему ENTERO/);
+    assert.match(html, /Свяжитесь со мной/);
     assert.match(html, /Знаем оборудование, рынок и реальные условия поставки/);
     assert.match(html, /id="contacts"/);
   }

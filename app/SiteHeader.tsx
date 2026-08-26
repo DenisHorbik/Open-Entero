@@ -14,7 +14,7 @@ type SiteHeaderProps = {
 };
 
 const defaultMobileCta: MobileCta = {
-  label: "Обсудить задачу",
+  label: "Свяжитесь со мной",
   href: "/?stage=idea&form=contact",
 };
 
