@@ -19,5 +19,6 @@ export default async function Home({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  return <EnteroPrototype initialStage={parseStage(params.stage)} />;
+  const form = Array.isArray(params.form) ? params.form[0] : params.form;
+  return <EnteroPrototype initialStage={parseStage(params.stage)} initialFormOpen={form === "contact"} />;
 }

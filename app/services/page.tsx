@@ -77,7 +77,7 @@ export default function ServicesPage() {
                   <div className="services-stage-plan" aria-hidden="true" />
                 </div>
 
-                <a className="button services-stage-cta" href={`/?stage=${stage.id}#stage-detail`}>
+                <a className="button services-stage-cta" href={`/?stage=${stage.id}&form=contact`}>
                   <span>{stage.detailCta}</span>
                   <ServiceArrow />
                 </a>

@@ -29,8 +29,15 @@ import {
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 import { WhyEntero } from "./WhyEntero";
+import { ContactForm } from "./ContactForm";
 
-export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
+export function EnteroPrototype({
+  initialStage,
+  initialFormOpen = false,
+}: {
+  initialStage: StageId;
+  initialFormOpen?: boolean;
+}) {
   const [activeId, setActiveId] = useState<StageId>(initialStage);
   const [requestedId, setRequestedId] = useState<StageId>(initialStage);
   const [fromId, setFromId] = useState<StageId | null>(null);
@@ -44,12 +51,33 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
   const gestureActive = useRef(false);
   const suppressClick = useRef(false);
   const [transitionDirection, setTransitionDirection] = useState<"next" | "previous" | "idle">("idle");
+  const [formOpen, setFormOpen] = useState(initialFormOpen);
   const imageCache = useRef(new Map<string, Promise<void>>());
   const selectionToken = useRef(0);
   const transitionToken = useRef(0);
   const runningAnimations = useRef<Animation[]>([]);
   const contentSwapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const active = stages[activeId];
+
+  const openForm = useCallback(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("form", "contact");
+    window.history.pushState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    setFormOpen(true);
+  }, []);
+
+  const closeForm = useCallback(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("form");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    setFormOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const onPopState = () => setFormOpen(new URL(window.location.href).searchParams.get("form") === "contact");
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   const loadImage = useCallback((url: string) => {
     const cached = imageCache.current.get(url);
@@ -429,15 +457,22 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
               <p className="hero-description mobile-copy">{active.mobileDescription}</p>
               {active.supporting && <p className="hero-supporting desktop-copy">{active.supporting}</p>}
               <div className="hero-actions">
-                <a className="button button-primary" href="#stage-detail">
+                <button className="button button-primary" type="button" onClick={openForm}>
                   <span>{active.primaryCta}</span>
                   <ArrowRight size={21} weight="light" aria-hidden="true" />
-                </a>
+                </button>
                 {active.secondaryCta && (
-                  <a className="button button-secondary" href="#stage-detail">
-                    <ClipboardText size={19} weight="light" aria-hidden="true" />
-                    <span>{active.secondaryCta}</span>
-                  </a>
+                  active.id === "project" ? (
+                    <button className="button button-secondary" type="button" onClick={openForm}>
+                      <ClipboardText size={19} weight="light" aria-hidden="true" />
+                      <span>{active.secondaryCta}</span>
+                    </button>
+                  ) : (
+                    <a className="button button-secondary" href="#stage-detail">
+                      <ClipboardText size={19} weight="light" aria-hidden="true" />
+                      <span>{active.secondaryCta}</span>
+                    </a>
+                  )
                 )}
               </div>
             </div>
@@ -484,10 +519,11 @@ export function EnteroPrototype({ initialStage }: { initialStage: StageId }) {
         </div>
       </section>
 
-      <StageDetail stage={active} />
+      <StageDetail stage={active} onOpenForm={openForm} />
       </div>
       <WhyEntero />
       <SiteFooter />
+      <ContactForm open={formOpen} stage={active.id} onClose={closeForm} />
     </main>
   );
 }
@@ -664,7 +700,7 @@ function ComparisonPanel({ stage }: { stage: Stage }) {
   );
 }
 
-function StageDetail({ stage }: { stage: Stage }) {
+function StageDetail({ stage, onOpenForm }: { stage: Stage; onOpenForm: () => void }) {
   return (
     <section className="stage-detail" id="stage-detail" data-stage={stage.id}>
       <div className="detail-blueprint" aria-hidden="true" />
@@ -699,10 +735,10 @@ function StageDetail({ stage }: { stage: Stage }) {
             </div>
           </div>
         </div>
-        <a className="button detail-cta" href="#stages">
+        <button className="button detail-cta" type="button" onClick={onOpenForm}>
           <span>{stage.detailCta}</span>
           <ArrowRight size={22} weight="light" aria-hidden="true" />
-        </a>
+        </button>
       </div>
     </section>
   );
