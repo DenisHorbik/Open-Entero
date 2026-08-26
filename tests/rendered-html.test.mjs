@@ -49,7 +49,39 @@ test("server-renders the services page from the shared stage content", async () 
   assert.equal((html.match(/class="services-stage"/g) ?? []).length, 3);
   assert.equal((html.match(/class="services-stage-features"/g) ?? []).length, 3);
   assert.equal((html.match(/class="button services-stage-cta"/g) ?? []).length, 3);
+  assert.match(html, /\?stage=idea&amp;form=contact/);
+  assert.match(html, /\?stage=space&amp;form=contact/);
+  assert.match(html, /\?stage=project&amp;form=contact/);
   assert.match(html, /href="https:\/\/entero\.by"/);
   assert.match(html, /target="_blank"/);
   assert.match(html, /id="contacts"/);
+});
+
+test("server-renders the stage-specific one-step contact form on direct entry", async () => {
+  const expectations = {
+    idea: "Прикинуть бюджет оборудования",
+    space: "Обсудить проект помещения",
+    project: "Разобрать спецификацию и подобрать оборудование",
+  };
+
+  for (const [stage, title] of Object.entries(expectations)) {
+    const response = await render(`/?stage=${stage}&form=contact`);
+    assert.equal(response.status, 200);
+    const html = await response.text();
+    assert.match(html, new RegExp(title));
+    assert.match(html, /Демо-режим — заявка пока не отправляется/);
+    assert.match(html, /Пока не определился/);
+    assert.match(html, /Прикрепить план или спецификацию/);
+  }
+});
+
+test("server-renders the stage-aware thanks page", async () => {
+  const response = await render("/thanks?stage=project");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /Спасибо\. Мы получили ваши вводные/);
+  assert.match(html, /разобрать спецификацию и варианты оборудования/);
+  assert.match(html, /https:\/\/t\.me\/EnteroMinsk/);
+  assert.match(html, /viber:\/\/chat\?number=%2B375445002929/);
+  assert.match(html, /Демо-режим — заявка и новый файл пока не отправляются/);
 });
