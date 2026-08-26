@@ -3,6 +3,8 @@ export function SiteFooter() {
     <footer className="site-footer" id="contacts">
       <div className="footer-main">
         <div className="footer-brand">
+          {/* Native navigation is more reliable in the current Vinext production runtime. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a className="footer-wordmark" href="/" aria-label="ENTERO, начало страницы">ENTERO</a>
           <p>Профессиональное оборудование и комплексное оснащение HoReCa в Беларуси.</p>
         </div>

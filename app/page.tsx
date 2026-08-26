@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { EnteroPrototype } from "./EnteroPrototype";
 import type { StageId } from "./entero-content";
+import { siteUrl } from "./seo-config";
 
 export const metadata: Metadata = {
   title: "ENTERO | Открываете ресторан?",
   description:
     "Интерактивный прототип ENTERO для выбора следующего шага в оснащении ресторана.",
+  alternates: { canonical: siteUrl },
 };
 
 function parseStage(value: string | string[] | undefined): StageId {

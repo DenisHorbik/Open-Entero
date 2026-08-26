@@ -57,33 +57,27 @@ test("Domain.by Node entrypoint serves HTML, assets and stage query state", asyn
     assert.match(html, /\+375 \(44\) 500-29-29/);
     assert.match(html, /ООО «РЕСТОИМПОРТ»/);
     assert.match(html, /Знаем оборудование, рынок и реальные условия поставки/);
-    assert.match(html, /href="\/services"/);
+    assert.match(html, /href="\/faq"/);
     assert.match(html, /href="https:\/\/entero\.by"/);
 
-    const servicesPage = await fetch(`${origin}/services`);
-    assert.equal(servicesPage.status, 200);
-    const servicesHtml = await servicesPage.text();
-    assert.match(servicesHtml, /<title>Услуги ENTERO \| Оснащение HoReCa<\/title>/);
-    assert.match(servicesHtml, /Помогаем пройти путь от идеи и бюджета/);
-    for (const heading of [
-      "Формат и концепция",
-      "Меню и оборудование",
-      "Посадочные места",
-      "Ориентир бюджета",
-      "Концепция и меню",
-      "Зонирование",
-      "Инженерные ограничения",
-      "Спецификация оборудования",
-      "Сравнение вариантов",
-      "Оптимизация бюджета",
-      "Наличие и сроки",
-      "Подбор под задачу",
-    ]) {
-      assert.match(servicesHtml, new RegExp(heading));
-    }
-    assert.match(servicesHtml, /href="\/\?stage=idea&amp;form=contact"/);
-    assert.match(servicesHtml, /href="\/\?stage=space&amp;form=contact"/);
-    assert.match(servicesHtml, /href="\/\?stage=project&amp;form=contact"/);
+    const faqPage = await fetch(`${origin}/faq`);
+    assert.equal(faqPage.status, 200);
+    const faqHtml = await faqPage.text();
+    assert.match(faqHtml, /<title>Вопросы об открытии и оснащении ресторана \| ENTERO<\/title>/);
+    assert.match(faqHtml, /Как мы работаем/);
+    assert.match(faqHtml, /Поставка и монтаж/);
+    assert.match(faqHtml, /Пусконаладка и сервис/);
+    assert.match(faqHtml, /Кредит и лизинг/);
+    assert.match(faqHtml, /"@type":"FAQPage"/);
+    assert.match(faqHtml, /href="\/\?stage=idea&amp;form=contact"/);
+
+    const servicesPage = await fetch(`${origin}/services`, { redirect: "manual" });
+    assert.equal(servicesPage.status, 308);
+    assert.equal(new URL(servicesPage.headers.get("location"), origin).pathname, "/faq");
+
+    const robots = await fetch(`${origin}/robots.txt`);
+    assert.equal(robots.status, 200);
+    assert.match(await robots.text(), /Disallow: \//);
     const stylesheetPath = html.match(/href="([^"]+\.css)"/)?.[1];
     assert.ok(stylesheetPath, "rendered HTML must include a stylesheet");
     const stylesheet = await fetch(`${origin}${stylesheetPath}`);

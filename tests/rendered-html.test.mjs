@@ -31,7 +31,7 @@ test("server-renders all ENTERO home stages with shared navigation and why secti
     const html = await response.text();
     assert.match(html, /Открываете ресторан/);
     assert.match(html, new RegExp(`data-stage="${stage}"`));
-    assert.match(html, /href="\/services"/);
+    assert.match(html, /href="\/faq"/);
     assert.match(html, /href="\/\?stage=idea"[^>]*>\s*<span>Главная<\/span>/);
     assert.match(html, /Каталог Entero/);
     assert.match(html, /Почему ENTERO/);
@@ -41,23 +41,31 @@ test("server-renders all ENTERO home stages with shared navigation and why secti
   }
 });
 
-test("server-renders the services page from the shared stage content", async () => {
-  const response = await render("/services");
+test("server-renders the FAQ page from shared visible and structured content", async () => {
+  const response = await render("/faq");
   assert.equal(response.status, 200);
   const html = await response.text();
 
-  assert.match(html, /Услуги ENTERO/);
+  assert.match(html, /Вопросы об открытии и оснащении ресторана/);
   assert.match(html, /href="\/\?stage=idea"[^>]*>\s*<span>Главная<\/span>/);
-  assert.match(html, /Помогаем пройти путь от идеи и бюджета/);
-  assert.equal((html.match(/class="services-stage"/g) ?? []).length, 3);
-  assert.equal((html.match(/class="services-stage-features"/g) ?? []).length, 3);
-  assert.equal((html.match(/class="button services-stage-cta"/g) ?? []).length, 3);
+  assert.equal((html.match(/class="faq-category"/g) ?? []).length, 7);
+  assert.equal((html.match(/<details/g) ?? []).length, 46);
+  assert.match(html, /От чего зависит срок поставки/);
+  assert.match(html, /Где указан подтверждённый срок каждой позиции/);
+  assert.match(html, /Рекомендуем согласовать выезд за 3–5 рабочих дней/);
+  assert.match(html, /Есть ли рассрочка от ENTERO/);
+  assert.match(html, /Какие документы понадобятся/);
+  assert.match(html, /"@type":"FAQPage"/);
   assert.match(html, /\?stage=idea&amp;form=contact/);
-  assert.match(html, /\?stage=space&amp;form=contact/);
-  assert.match(html, /\?stage=project&amp;form=contact/);
   assert.match(html, /href="https:\/\/entero\.by"/);
   assert.match(html, /target="_blank"/);
   assert.match(html, /id="contacts"/);
+});
+
+test("services permanently redirects to the FAQ page", async () => {
+  const response = await render("/services");
+  assert.equal(response.status, 308);
+  assert.equal(new URL(response.headers.get("location"), "http://localhost").pathname, "/faq");
 });
 
 test("server-renders the stage-specific one-step contact form on direct entry", async () => {

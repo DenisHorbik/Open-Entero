@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ShieldCheck } from "@phosphor-icons/react";
+import { ArrowRight, ArrowUpRight, ShieldCheck } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { mobileNavigationItems, navigationItems } from "./navigation";
 
@@ -9,7 +9,7 @@ type MobileCta =
   | { label: string; href?: never; onClick: () => void };
 
 type SiteHeaderProps = {
-  currentPage?: "home" | "services";
+  currentPage?: "home" | "faq";
   mobileCta?: MobileCta;
   wordmarkHref?: string;
 };
@@ -99,8 +99,11 @@ export function SiteHeader({
             target={item.external ? "_blank" : undefined}
             rel={item.external ? "noreferrer" : undefined}
             aria-current={item.page === currentPage ? "page" : undefined}
+            aria-label={item.external ? `${item.label} — внешний сайт, откроется в новой вкладке` : undefined}
+            data-external={item.external || undefined}
           >
-            {item.label}
+            <span>{item.label}</span>
+            {item.external && <ArrowUpRight size={16} weight="regular" aria-hidden="true" />}
           </a>
         ))}
       </nav>
@@ -141,10 +144,13 @@ export function SiteHeader({
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noreferrer" : undefined}
                 aria-current={item.page === currentPage ? "page" : undefined}
+                aria-label={item.external ? `${item.label} — внешний сайт, откроется в новой вкладке` : undefined}
+                data-external={item.external || undefined}
                 tabIndex={menuOpen ? 0 : -1}
                 onClick={closeMenu}
               >
                 <span>{item.label}</span>
+                {item.external && <ArrowUpRight size={24} weight="regular" aria-hidden="true" />}
               </a>
             ))}
           </nav>
