@@ -32,6 +32,9 @@ import { WhyEntero } from "./WhyEntero";
 import { ContactForm } from "./ContactForm";
 import { collectLeadAttribution } from "./lead-attribution";
 
+type GestureMode = "idle" | "pending" | "horizontal" | "vertical" | "completed";
+type GestureSource = "pointer" | "touch";
+
 export function EnteroPrototype({
   initialStage,
   initialFormOpen = false,
@@ -43,14 +46,21 @@ export function EnteroPrototype({
   const [requestedId, setRequestedId] = useState<StageId>(initialStage);
   const [fromId, setFromId] = useState<StageId | null>(null);
   const [incomingId, setIncomingId] = useState<StageId | null>(null);
+  const activeIdRef = useRef<StageId>(initialStage);
+  const requestedIdRef = useRef<StageId>(initialStage);
+  const incomingIdRef = useRef<StageId | null>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
   const startTime = useRef(0);
-  const activePointerId = useRef<number | null>(null);
+  const lastX = useRef(0);
+  const lastY = useRef(0);
+  const lastTime = useRef(0);
+  const gestureId = useRef<number | null>(null);
+  const gestureSource = useRef<GestureSource | null>(null);
+  const gestureMode = useRef<GestureMode>("idle");
   const carouselRef = useRef<HTMLDivElement | null>(null);
-  const gestureActive = useRef(false);
-  const suppressClick = useRef(false);
+  const suppressClickUntil = useRef(0);
   const [transitionDirection, setTransitionDirection] = useState<"next" | "previous" | "idle">("idle");
   const [formOpen, setFormOpen] = useState(initialFormOpen);
   const imageCache = useRef(new Map<string, Promise<void>>());
@@ -59,6 +69,18 @@ export function EnteroPrototype({
   const runningAnimations = useRef<Animation[]>([]);
   const contentSwapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const active = stages[activeId];
+
+  useEffect(() => {
+    activeIdRef.current = activeId;
+  }, [activeId]);
+
+  useEffect(() => {
+    requestedIdRef.current = requestedId;
+  }, [requestedId]);
+
+  useEffect(() => {
+    incomingIdRef.current = incomingId;
+  }, [incomingId]);
 
   const openForm = useCallback(() => {
     const url = new URL(window.location.href);
@@ -225,7 +247,10 @@ export function EnteroPrototype({
 
     const transitionStage = incomingId;
     contentSwapTimer.current = setTimeout(() => {
-      if (transitionToken.current === currentTransition) setActiveId(transitionStage);
+      if (transitionToken.current === currentTransition) {
+        activeIdRef.current = transitionStage;
+        setActiveId(transitionStage);
+      }
     }, reduceMotion ? 90 : 210);
 
     void pictureAnimation.finished.then(() => {
@@ -234,8 +259,10 @@ export function EnteroPrototype({
       copy.style.willChange = "";
       dim.style.willChange = "";
       finishRunningAnimations();
+      activeIdRef.current = transitionStage;
       setActiveId(transitionStage);
       setFromId(null);
+      incomingIdRef.current = null;
       setIncomingId(null);
       setTransitionDirection("idle");
     }).catch(() => undefined);
@@ -312,25 +339,32 @@ export function EnteroPrototype({
 
   const select = useCallback(
     async (nextId: StageId, focus = false, direction: "next" | "previous" | "idle" = "idle") => {
-      if (nextId === requestedId) return;
+      const currentRequestedId = requestedIdRef.current;
+      if (nextId === currentRequestedId) return;
       const token = ++selectionToken.current;
+      requestedIdRef.current = nextId;
       setRequestedId(nextId);
       const resolvedDirection = direction === "idle"
-        ? order.indexOf(nextId) > order.indexOf(requestedId) ? "next" : "previous"
+        ? order.indexOf(nextId) > order.indexOf(currentRequestedId) ? "next" : "previous"
         : direction;
 
       try {
         await prepareStageImage(nextId);
       } catch {
-        if (token === selectionToken.current) setRequestedId(activeId);
+        if (token === selectionToken.current) {
+          requestedIdRef.current = activeIdRef.current;
+          setRequestedId(activeIdRef.current);
+        }
         return;
       }
       if (token !== selectionToken.current) return;
-      const transitionFrom = incomingId ?? activeId;
+      const transitionFrom = incomingIdRef.current ?? activeIdRef.current;
       transitionToken.current += 1;
       finishRunningAnimations();
+      activeIdRef.current = transitionFrom;
       setActiveId(transitionFrom);
       setFromId(transitionFrom);
+      incomingIdRef.current = nextId;
       setIncomingId(nextId);
       setTransitionDirection(resolvedDirection);
 
@@ -341,23 +375,24 @@ export function EnteroPrototype({
       const index = order.indexOf(nextId);
       if (focus) requestAnimationFrame(() => tabRefs.current[index]?.focus());
     },
-    [activeId, finishRunningAnimations, incomingId, prepareStageImage, requestedId],
+    [finishRunningAnimations, prepareStageImage],
   );
 
-  const move = (direction: 1 | -1) => {
-    const current = order.indexOf(requestedId);
+  const move = useCallback((direction: 1 | -1) => {
+    const current = order.indexOf(requestedIdRef.current);
     const next = (current + direction + order.length) % order.length;
     void select(order[next], false, direction > 0 ? "next" : "previous");
     return true;
-  };
+  }, [select]);
 
-  const resetSwipe = () => {
+  const resetSwipe = useCallback(() => {
     const carousel = carouselRef.current;
-    const pointerId = activePointerId.current;
+    const pointerId = gestureSource.current === "pointer" ? gestureId.current : null;
     startX.current = null;
     startY.current = null;
-    activePointerId.current = null;
-    gestureActive.current = false;
+    gestureId.current = null;
+    gestureSource.current = null;
+    gestureMode.current = "idle";
     if (carousel) {
       carousel.style.setProperty("--gesture-progress", "0");
       carousel.removeAttribute("data-dragging");
@@ -370,73 +405,174 @@ export function EnteroPrototype({
         }
       }
     }
-  };
+  }, []);
 
-  const onCarouselPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!window.matchMedia("(max-width: 760px)").matches || event.pointerType === "mouse") return;
-    const target = event.target as HTMLElement;
-    const stageTab = target.closest(".stage-tab");
-    if (!stageTab && target.closest('[data-swipe-ignore="true"], a, button')) {
-      suppressClick.current = false;
-      return;
+  const beginSwipe = useCallback((
+    source: GestureSource,
+    id: number,
+    x: number,
+    y: number,
+    target: EventTarget | null,
+  ) => {
+    if (!window.matchMedia("(max-width: 760px)").matches) return false;
+    const element = target instanceof HTMLElement ? target : null;
+    const stageTab = element?.closest(".stage-tab");
+    if (!stageTab && element?.closest('[data-swipe-ignore="true"], a, button, input, select, textarea, label')) {
+      return false;
     }
-    if (event.clientX < 24 || event.clientX > window.innerWidth - 24) return;
-    if (activePointerId.current !== null) return;
-    suppressClick.current = false;
-    activePointerId.current = event.pointerId;
-    startX.current = event.clientX;
-    startY.current = event.clientY;
+    if (x < 24 || x > window.innerWidth - 24 || gestureMode.current !== "idle") return false;
+
+    gestureSource.current = source;
+    gestureId.current = id;
+    gestureMode.current = "pending";
+    startX.current = x;
+    startY.current = y;
     startTime.current = performance.now();
-  };
+    lastX.current = x;
+    lastY.current = y;
+    lastTime.current = startTime.current;
+    return true;
+  }, []);
 
-  const onCarouselPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (activePointerId.current !== event.pointerId || startX.current === null || startY.current === null) return;
-    const dx = event.clientX - startX.current;
-    const dy = event.clientY - startY.current;
-    if (!gestureActive.current) {
-      if (Math.abs(dy) >= 6 && Math.abs(dy) > Math.abs(dx) * 1.08) {
-        resetSwipe();
-        return;
-      }
-      if (Math.abs(dx) < 6 || Math.abs(dx) <= Math.abs(dy) * 1.08) return;
-      gestureActive.current = true;
-      suppressClick.current = true;
-      try {
-        event.currentTarget.setPointerCapture(event.pointerId);
-      } catch {
-        // Touch pointers are implicitly captured by modern mobile browsers.
-      }
-      event.currentTarget.setAttribute("data-dragging", "true");
-    }
-    const progress = Math.min(1, Math.abs(dx) / 56);
-    event.currentTarget.dataset.swipe = dx < 0 ? "next" : "previous";
-    event.currentTarget.style.setProperty("--gesture-progress", progress.toFixed(3));
-  };
-
-  const onCarouselPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+  const updateSwipe = useCallback((source: GestureSource, id: number, x: number, y: number) => {
     if (
-      activePointerId.current !== event.pointerId
+      gestureSource.current !== source
+      || gestureId.current !== id
       || startX.current === null
       || startY.current === null
+      || gestureMode.current === "idle"
+      || gestureMode.current === "completed"
     ) return;
-    const dx = event.clientX - startX.current;
-    const dy = event.clientY - startY.current;
-    const elapsed = Math.max(1, performance.now() - startTime.current);
+
+    lastX.current = x;
+    lastY.current = y;
+    lastTime.current = performance.now();
+    const dx = x - startX.current;
+    const dy = y - startY.current;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    if (gestureMode.current === "pending") {
+      if (absX < 10 && absY < 10) return;
+      if (absY > absX * 1.15) {
+        gestureMode.current = "vertical";
+        return;
+      }
+      if (absX < 10 || absX <= absY * 1.05) return;
+      gestureMode.current = "horizontal";
+      suppressClickUntil.current = performance.now() + 420;
+      if (source === "pointer" && carouselRef.current) {
+        try {
+          carouselRef.current.setPointerCapture(id);
+        } catch {
+          // Safari may already use implicit capture for touch pointers.
+        }
+      }
+      carouselRef.current?.setAttribute("data-dragging", "true");
+    }
+
+    if (gestureMode.current !== "horizontal" || !carouselRef.current) return;
+    const progress = Math.min(1, absX / 56);
+    carouselRef.current.dataset.swipe = dx < 0 ? "next" : "previous";
+    carouselRef.current.style.setProperty("--gesture-progress", progress.toFixed(3));
+  }, []);
+
+  const completeSwipe = useCallback((
+    source: GestureSource,
+    id: number,
+    x?: number,
+    y?: number,
+  ) => {
+    if (
+      gestureSource.current !== source
+      || gestureId.current !== id
+      || startX.current === null
+      || startY.current === null
+      || gestureMode.current === "idle"
+      || gestureMode.current === "completed"
+    ) return;
+
+    const endX = x ?? lastX.current;
+    const endY = y ?? lastY.current;
+    const dx = endX - startX.current;
+    const dy = endY - startY.current;
+    const elapsed = Math.max(1, (lastTime.current || performance.now()) - startTime.current);
     const velocity = Math.abs(dx) / elapsed;
-    const horizontalIntent = Math.abs(dx) > Math.abs(dy) * 1.08;
+    const horizontalIntent = Math.abs(dx) > Math.abs(dy) * 1.05;
     const completed = Math.abs(dx) >= 28 || (Math.abs(dx) >= 16 && velocity >= 0.28);
-    if (horizontalIntent && completed) {
-      suppressClick.current = true;
+    const recognizedHorizontal = gestureMode.current === "horizontal"
+      || (gestureMode.current === "pending" && horizontalIntent);
+
+    gestureMode.current = "completed";
+    if (recognizedHorizontal && completed) {
+      suppressClickUntil.current = performance.now() + 420;
       move(dx < 0 ? 1 : -1);
     }
     resetSwipe();
+  }, [move, resetSwipe]);
+
+  const onCarouselPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    beginSwipe("pointer", event.pointerId, event.clientX, event.clientY, event.target);
   };
 
+  const onCarouselTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if ("PointerEvent" in window || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    beginSwipe("touch", touch.identifier, touch.clientX, touch.clientY, event.target);
+  };
+
+  useEffect(() => {
+    const onPointerMove = (event: PointerEvent) => {
+      updateSwipe("pointer", event.pointerId, event.clientX, event.clientY);
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      completeSwipe("pointer", event.pointerId, event.clientX, event.clientY);
+    };
+    const onPointerCancel = (event: PointerEvent) => {
+      completeSwipe("pointer", event.pointerId);
+    };
+    const findTouch = (touches: TouchList) => {
+      const id = gestureId.current;
+      if (gestureSource.current !== "touch" || id === null) return null;
+      return Array.from(touches).find((touch) => touch.identifier === id) ?? null;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      const touch = findTouch(event.touches);
+      if (touch) updateSwipe("touch", touch.identifier, touch.clientX, touch.clientY);
+    };
+    const onTouchEnd = (event: TouchEvent) => {
+      const touch = findTouch(event.changedTouches);
+      if (touch) completeSwipe("touch", touch.identifier, touch.clientX, touch.clientY);
+    };
+    const onTouchCancel = (event: TouchEvent) => {
+      const touch = findTouch(event.changedTouches);
+      if (touch) completeSwipe("touch", touch.identifier);
+    };
+    const onBlur = () => resetSwipe();
+
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerup", onPointerUp, { passive: true });
+    window.addEventListener("pointercancel", onPointerCancel, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchCancel, { passive: true });
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchCancel);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, [completeSwipe, resetSwipe, updateSwipe]);
+
   const onCarouselClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!suppressClick.current) return;
+    if (performance.now() > suppressClickUntil.current) return;
     event.preventDefault();
     event.stopPropagation();
-    suppressClick.current = false;
+    suppressClickUntil.current = 0;
   };
 
   const keyNav = (event: React.KeyboardEvent, index: number) => {
@@ -459,10 +595,7 @@ export function EnteroPrototype({
         className="stage-carousel"
         data-direction={transitionDirection}
         onPointerDown={onCarouselPointerDown}
-        onPointerMove={onCarouselPointerMove}
-        onPointerUp={onCarouselPointerUp}
-        onPointerCancel={resetSwipe}
-        onLostPointerCapture={resetSwipe}
+        onTouchStart={onCarouselTouchStart}
         onClickCapture={onCarouselClickCapture}
       >
       <section className="hero" id="stages" aria-labelledby="hero-title">

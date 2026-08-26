@@ -1683,7 +1683,10 @@ summary:focus-visible {
   }
   .mobile-navigation {
     position: fixed;
-    inset: 0;
+    top: 0;
+    bottom: 0;
+    left: calc((100vw - 100%) / -2);
+    right: auto;
     z-index: 2;
     width: 100vw;
     height: 100dvh;
