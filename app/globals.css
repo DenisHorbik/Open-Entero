@@ -2191,6 +2191,16 @@ button:focus-visible {
   line-height: 0.98;
 }
 .thanks-message { max-width: 610px; margin: 26px 0 0; color: #ccc8c0; font-size: 1.02rem; line-height: 1.62; }
+.thanks-phone-link {
+  color: var(--gold-light);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(225, 171, 92, 0.55);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+.thanks-phone-link:hover { text-decoration-color: currentColor; }
+.thanks-phone-link:focus-visible { outline: 1px solid var(--gold-light); outline-offset: 4px; border-radius: 2px; }
 .thanks-messengers { display: flex; gap: 12px; margin-top: 35px; }
 .thanks-messengers a,
 .thanks-return {

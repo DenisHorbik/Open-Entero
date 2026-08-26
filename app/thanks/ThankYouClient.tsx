@@ -5,12 +5,6 @@ import { useState } from "react";
 import type { StageId } from "../entero-content";
 import { isValidLeadFile, LEAD_FILE_ACCEPT, MAX_LEAD_FILE_SIZE } from "../lead-preview";
 
-const messages: Record<StageId, string> = {
-  idea: "Следующий шаг — уточнить формат и ориентир бюджета.",
-  space: "Следующий шаг — обсудить помещение и задачу проекта.",
-  project: "Следующий шаг — разобрать спецификацию и варианты оборудования.",
-};
-
 export function ThankYouClient({ stage }: { stage: StageId }) {
   const [fileName, setFileName] = useState("");
   const [fileError, setFileError] = useState("");
@@ -35,9 +29,13 @@ export function ThankYouClient({ stage }: { stage: StageId }) {
       <div className="thanks-grid" aria-hidden="true" />
       <div className="thanks-inner">
         <CheckCircle size={44} weight="light" aria-hidden="true" />
-        <p className="thanks-kicker">ENTERO · запрос подготовлен</p>
+        <p className="thanks-kicker">ENTERO · Ваш запрос отправлен</p>
         <h1 id="thanks-title">Спасибо. Мы получили ваши вводные.</h1>
-        <p className="thanks-message">{messages[stage]}</p>
+        <p className="thanks-message">
+          Свяжемся с Вами в течение 1 рабочего дня. Если срочно —{" "}
+          <a className="thanks-phone-link" href="tel:+375445002929">звоните</a>{" "}
+          или пишите в удобный для Вас мессенджер:
+        </p>
 
         <div className="thanks-messengers" aria-label="Связаться с ENTERO">
           <a href="https://t.me/EnteroMinsk" target="_blank" rel="noreferrer">Telegram</a>
