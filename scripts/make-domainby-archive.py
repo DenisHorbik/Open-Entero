@@ -18,7 +18,19 @@ stage.mkdir()
 for directory in ("dist", "server"):
     shutil.copytree(root / directory, stage / directory)
 
-(stage / "server.js").write_text('import "./server/index.mjs";\n', encoding="utf-8")
+(stage / "server.js").write_text(
+    """import { existsSync } from "node:fs";
+
+const envFile = new URL("./crm-config.txt", import.meta.url);
+
+if (existsSync(envFile)) {
+  process.loadEnvFile(envFile);
+}
+
+await import("./server/index.mjs");
+""",
+    encoding="utf-8",
+)
 (stage / "package.json").write_text(
     json.dumps(
         {

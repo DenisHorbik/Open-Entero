@@ -25,6 +25,12 @@ LEAD_UPLOAD_SECRET=<random secret of at least 32 characters>
 
 `BITRIX24_WEBHOOK_URL` must use HTTPS. `LEAD_UPLOAD_SECRET` signs the short-lived token used when a visitor adds a document on the thank-you page. Restart only the `open.entero.by` Node.js application after changing these values.
 
+On Domain.by these values are stored in `/www/open.entero.by/crm-config.txt`.
+The generated `server.js` loads that file before starting the application. The
+secret file is deliberately excluded from release archives and Git. The Node
+server serves only the compiled `dist` tree, so this host-level file is not a
+public web asset.
+
 The entrypoint supports both hosting styles:
 
 - ISPmanager socket: set `SOCKET_PATH` or `SOCKET` to the socket path supplied by the panel.
