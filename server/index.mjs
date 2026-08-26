@@ -77,6 +77,7 @@ async function assetFetch(request) {
 
 const workerEnv = { ASSETS: { fetch: assetFetch } };
 const workerContext = { waitUntil() {}, passThroughOnException() {} };
+const MAX_LEAD_REQUEST_BYTES = 21 * 1024 * 1024;
 
 const server = createServer(async (incoming, outgoing) => {
   try {
@@ -102,6 +103,21 @@ const server = createServer(async (incoming, outgoing) => {
     }
 
     const method = incoming.method || "GET";
+    const contentLength = Number(incoming.headers["content-length"] || 0);
+    if (
+      method === "POST"
+      && url.pathname.startsWith("/api/leads")
+      && Number.isFinite(contentLength)
+      && contentLength > MAX_LEAD_REQUEST_BYTES
+    ) {
+      outgoing.writeHead(413, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+      outgoing.end(JSON.stringify({
+        ok: false,
+        code: "validation",
+        message: "Размер файла не должен превышать 20 МБ.",
+      }));
+      return;
+    }
     const init = { method, headers: incoming.headers };
     if (method !== "GET" && method !== "HEAD") {
       init.body = Readable.toWeb(incoming);

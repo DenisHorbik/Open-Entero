@@ -13,12 +13,20 @@ import {
 } from "../lead-preview";
 
 const DRAFT_STORAGE_KEY = "entero-contact-draft";
+const THANKS_STORAGE_KEY = "entero-thanks-context";
 const VIBER_CHAT_URL = "viber://chat?number=%2B375445002929";
 
 type SavedContactDraft = {
   phone?: string;
   name?: string;
   venueType?: VenueType;
+};
+
+type ThanksContext = {
+  requestId?: string;
+  uploadToken?: string;
+  fileWarning?: string;
+  stage?: StageId;
 };
 
 function readContactDraft(serializedDraft: string | null): SavedContactDraft | null {
@@ -39,6 +47,18 @@ function getContactDraftSnapshot() {
 
 function getServerContactDraftSnapshot() {
   return null;
+}
+
+function getThanksContextSnapshot() {
+  return sessionStorage.getItem(THANKS_STORAGE_KEY);
+}
+
+function readThanksContext(serialized: string | null): ThanksContext | null {
+  try {
+    return JSON.parse(serialized ?? "null") as ThanksContext | null;
+  } catch {
+    return null;
+  }
 }
 
 function buildMessengerMessage(stage: StageId, draft: SavedContactDraft | null) {
@@ -71,16 +91,25 @@ export function ThankYouClient({ stage }: { stage: StageId }) {
     getContactDraftSnapshot,
     getServerContactDraftSnapshot,
   );
+  const serializedThanksContext = useSyncExternalStore(
+    subscribeToContactDraft,
+    getThanksContextSnapshot,
+    getServerContactDraftSnapshot,
+  );
   const contactDraft = useMemo(() => readContactDraft(serializedDraft), [serializedDraft]);
+  const thanksContext = useMemo(() => readThanksContext(serializedThanksContext), [serializedThanksContext]);
   const [fileName, setFileName] = useState("");
   const [fileError, setFileError] = useState("");
+  const [fileStatus, setFileStatus] = useState("");
+  const [fileUploading, setFileUploading] = useState(false);
   const [viberStatus, setViberStatus] = useState("");
   const messengerMessage = buildMessengerMessage(stage, contactDraft);
   const telegramHref = `https://t.me/EnteroMinsk?text=${encodeURIComponent(messengerMessage)}`;
 
-  const handleFile = (file: File | null) => {
+  const handleFile = async (file: File | null) => {
     setFileName("");
     setFileError("");
+    setFileStatus("");
     if (!file) return;
     if (!isValidLeadFile(file)) {
       setFileError("Подойдут PDF, Excel, Word, JPG или PNG.");
@@ -91,6 +120,28 @@ export function ThankYouClient({ stage }: { stage: StageId }) {
       return;
     }
     setFileName(file.name);
+    if (!thanksContext?.uploadToken) {
+      setFileError("Ссылка на заявку недоступна. Отправьте документ менеджеру через Telegram или Viber.");
+      return;
+    }
+
+    setFileUploading(true);
+    const body = new FormData();
+    body.set("uploadToken", thanksContext.uploadToken);
+    body.set("attachmentId", typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `file-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    body.set("file", file);
+    try {
+      const response = await fetch("/api/leads/attachments", { method: "POST", body });
+      const result = await response.json().catch(() => null) as { ok?: boolean; message?: string } | null;
+      if (!response.ok || !result?.ok) throw new Error(result?.message || "Файл не загрузился.");
+      setFileStatus("Документ добавлен в вашу заявку.");
+    } catch (error) {
+      setFileError(error instanceof Error ? error.message : "Файл не загрузился. Попробуйте ещё раз.");
+    } finally {
+      setFileUploading(false);
+    }
   };
 
   const handleViber = async (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -130,18 +181,24 @@ export function ThankYouClient({ stage }: { stage: StageId }) {
         </div>
         <p className="thanks-copy-status" role="status" aria-live="polite">{viberStatus}</p>
 
-        <label className="thanks-file" data-has-file={Boolean(fileName) || undefined}>
-          <input type="file" accept={LEAD_FILE_ACCEPT} onChange={(event) => handleFile(event.target.files?.[0] ?? null)} />
+        {thanksContext?.fileWarning && <p className="thanks-file-warning" role="status">{thanksContext.fileWarning}</p>}
+        <label className="thanks-file" data-has-file={Boolean(fileName) || undefined} data-uploading={fileUploading || undefined}>
+          <input
+            type="file"
+            accept={LEAD_FILE_ACCEPT}
+            disabled={fileUploading}
+            onChange={(event) => void handleFile(event.target.files?.[0] ?? null)}
+          />
           <Paperclip size={21} weight="light" aria-hidden="true" />
-          <span>{fileName || "Прикрепить документ дополнительно"}</span>
+          <span>{fileUploading ? "Добавляем документ…" : fileName || "Прикрепить документ дополнительно"}</span>
         </label>
         {fileError && <p className="lead-error">{fileError}</p>}
+        {fileStatus && <p className="thanks-file-success" role="status">{fileStatus}</p>}
 
         <a className="thanks-return" href={`/?stage=${stage}`}>
           <ArrowLeft size={19} weight="light" aria-hidden="true" />
           Вернуться на сайт
         </a>
-        <p className="lead-demo-note">Демо-режим — заявка и новый файл пока не отправляются.</p>
       </div>
     </section>
   );

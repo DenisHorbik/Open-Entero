@@ -90,6 +90,13 @@ test("Domain.by Node entrypoint serves HTML, assets and stage query state", asyn
     assert.equal(stylesheet.status, 200);
     assert.match(stylesheet.headers.get("content-type"), /text\/css/);
     assert.match(await stylesheet.text(), /context-panel/);
+
+    const oversized = await fetch(`${origin}/api/leads`, {
+      method: "POST",
+      body: Buffer.alloc(22 * 1024 * 1024),
+    });
+    assert.equal(oversized.status, 413);
+    assert.equal((await oversized.json()).code, "validation");
   } finally {
     if (child.exitCode === null) {
       child.kill("SIGTERM");

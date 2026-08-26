@@ -30,6 +30,7 @@ import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 import { WhyEntero } from "./WhyEntero";
 import { ContactForm } from "./ContactForm";
+import { collectLeadAttribution } from "./lead-attribution";
 
 export function EnteroPrototype({
   initialStage,
@@ -72,6 +73,10 @@ export function EnteroPrototype({
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     setFormOpen(false);
   }, []);
+
+  useEffect(() => {
+    collectLeadAttribution(initialStage);
+  }, [initialStage]);
 
   useEffect(() => {
     const onPopState = () => setFormOpen(new URL(window.location.href).searchParams.get("form") === "contact");

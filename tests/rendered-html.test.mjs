@@ -70,7 +70,8 @@ test("server-renders the stage-specific one-step contact form on direct entry", 
     assert.equal(response.status, 200);
     const html = await response.text();
     assert.match(html, new RegExp(title));
-    assert.match(html, /Демо-режим — заявка пока не отправляется/);
+    assert.doesNotMatch(html, /Демо-режим/);
+    assert.match(html, /class="lead-honeypot"/);
     assert.match(html, /Пока не определился/);
     assert.match(html, /Прикрепить план или спецификацию/);
   }
@@ -87,5 +88,6 @@ test("server-renders the stage-aware thanks page", async () => {
   assert.match(html, /https:\/\/t\.me\/EnteroMinsk\?text=/);
   assert.match(html, /viber:\/\/chat\?number=%2B375445002929/);
   assert.match(html, /class="thanks-copy-status"/);
-  assert.match(html, /Демо-режим — заявка и новый файл пока не отправляются/);
+  assert.match(html, /Прикрепить документ дополнительно/);
+  assert.doesNotMatch(html, /Демо-режим/);
 });

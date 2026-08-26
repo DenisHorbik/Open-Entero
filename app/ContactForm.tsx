@@ -3,10 +3,12 @@
 import { ArrowRight, Check, Paperclip, X } from "@phosphor-icons/react";
 import { useEffect, useId, useRef, useState } from "react";
 import type { StageId } from "./entero-content";
+import { collectLeadAttribution } from "./lead-attribution";
 import {
   contactMethods,
   isValidBelarusPhone,
   isValidLeadFile,
+  LeadDeliveryError,
   LEAD_FILE_ACCEPT,
   MAX_LEAD_FILE_SIZE,
   stageFormCopy,
@@ -43,6 +45,7 @@ export function ContactForm({ open, stage, onClose }: ContactFormProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
+  const idempotencyKeyRef = useRef<string | null>(null);
   const [savedDraft] = useState(readSavedDraft);
   const [phone, setPhone] = useState(savedDraft?.phone ?? "+375 ");
   const [name, setName] = useState(savedDraft?.name ?? "");
@@ -51,6 +54,8 @@ export function ContactForm({ open, stage, onClose }: ContactFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [phoneError, setPhoneError] = useState("");
   const [fileError, setFileError] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [website, setWebsite] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const copy = stageFormCopy[stage];
 
@@ -125,15 +130,38 @@ export function ContactForm({ open, stage, onClose }: ContactFormProps) {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setPhoneError("");
+    setSubmitError("");
     if (!isValidBelarusPhone(phone)) {
       setPhoneError("Укажите номер телефона, по которому мы сможем связаться.");
       return;
     }
     setSubmitting(true);
     try {
-      const result = await submitLead({ stage, phone, contactMethod, venueType, name, file });
-      sessionStorage.setItem("entero-thanks-context", JSON.stringify({ requestId: result.requestId, stage }));
+      idempotencyKeyRef.current ||= typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `lead-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const result = await submitLead({
+        idempotencyKey: idempotencyKeyRef.current,
+        stage,
+        phone,
+        contactMethod,
+        venueType,
+        name,
+        website,
+        attribution: collectLeadAttribution(stage),
+        file,
+      });
+      sessionStorage.setItem("entero-thanks-context", JSON.stringify({
+        requestId: result.requestId,
+        uploadToken: result.uploadToken,
+        fileWarning: result.fileWarning,
+        stage,
+      }));
       window.location.assign(`/thanks?stage=${stage}`);
+    } catch (error) {
+      setSubmitError(error instanceof LeadDeliveryError
+        ? error.message
+        : "Не удалось отправить заявку. Попробуйте ещё раз или позвоните нам.");
     } finally {
       setSubmitting(false);
     }
@@ -161,6 +189,10 @@ export function ContactForm({ open, stage, onClose }: ContactFormProps) {
         </header>
 
         <form className="lead-form" onSubmit={handleSubmit} noValidate>
+          <div className="lead-honeypot" aria-hidden="true">
+            <label htmlFor="lead-website">Сайт</label>
+            <input id="lead-website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} />
+          </div>
           <div className="lead-field">
             <label htmlFor="lead-phone">Телефон <span>обязательное поле</span></label>
             <input
@@ -227,7 +259,7 @@ export function ContactForm({ open, stage, onClose }: ContactFormProps) {
               <span>{submitting ? "Готовим запрос…" : copy.submit}</span>
               <ArrowRight size={21} weight="light" aria-hidden="true" />
             </button>
-            <p className="lead-demo-note">Демо-режим — заявка пока не отправляется.</p>
+            {submitError && <p className="lead-submit-error" role="alert">{submitError}</p>}
           </div>
         </form>
       </div>

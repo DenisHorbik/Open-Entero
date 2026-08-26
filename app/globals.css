@@ -1894,7 +1894,7 @@ button:focus-visible {
   .footer-brand { grid-column: auto; }
 }
 
-/* Lead capture — isolated preview adapter, no CRM delivery yet. */
+/* Lead capture — provider-agnostic UI with server-side CRM delivery. */
 .lead-dialog {
   position: fixed;
   z-index: 500;
@@ -1994,6 +1994,15 @@ button:focus-visible {
   display: grid;
   gap: 22px;
   padding-top: 28px;
+}
+
+.lead-honeypot {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .lead-field {
@@ -2142,6 +2151,18 @@ button:focus-visible {
   line-height: 1.4;
 }
 
+.lead-submit-error,
+.thanks-file-warning {
+  margin: 0;
+  padding: 11px 13px;
+  color: #f0c8be;
+  border: 1px solid rgba(229, 168, 156, 0.32);
+  border-radius: 8px;
+  background: rgba(91, 43, 37, 0.24);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
 .lead-submit-wrap {
   display: grid;
   gap: 10px;
@@ -2158,7 +2179,6 @@ button:focus-visible {
 }
 
 .lead-submit:disabled { opacity: 0.66; cursor: wait; transform: none; }
-.lead-demo-note { margin: 0; color: var(--muted-2); font-size: 0.67rem; line-height: 1.45; }
 
 .thanks-section {
   position: relative;
@@ -2226,8 +2246,11 @@ button:focus-visible {
 }
 .thanks-file { width: min(100%, 520px); margin-top: 24px; }
 .thanks-file span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thanks-file[data-uploading="true"] { opacity: 0.72; cursor: wait; }
+.thanks-file-warning { width: min(100%, 520px); margin-top: 24px; }
+.thanks-file-warning + .thanks-file { margin-top: 12px; }
+.thanks-file-success { width: min(100%, 520px); margin: 10px 0 0; color: #c8d9bf; font-size: 0.76rem; line-height: 1.4; }
 .thanks-return { margin-top: 28px; padding-inline: 0; border: 0; background: transparent; color: #d9d4cb; }
-.thanks-inner > .lead-demo-note { margin-top: 12px; }
 
 @keyframes lead-backdrop-in { from { opacity: 0; } }
 @keyframes lead-panel-in { from { opacity: 0.6; transform: translate3d(34px, 0, 0); } }
