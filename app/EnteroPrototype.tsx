@@ -139,7 +139,10 @@ export function EnteroPrototype({
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const current = order.indexOf(activeId);
-      const adjacent = [order[current - 1], order[current + 1]].filter(Boolean) as StageId[];
+      const adjacent = new Set<StageId>([
+        order[(current - 1 + order.length) % order.length],
+        order[(current + 1) % order.length],
+      ]);
       for (const id of adjacent) void prepareStageImage(id);
     }, 500);
     return () => window.clearTimeout(timer);
@@ -343,32 +346,41 @@ export function EnteroPrototype({
 
   const move = (direction: 1 | -1) => {
     const current = order.indexOf(requestedId);
-    const next = Math.max(0, Math.min(order.length - 1, current + direction));
-    if (next === current) return false;
+    const next = (current + direction + order.length) % order.length;
     void select(order[next], false, direction > 0 ? "next" : "previous");
     return true;
   };
 
   const resetSwipe = () => {
     const carousel = carouselRef.current;
-    if (carousel) {
-      carousel.style.setProperty("--gesture-progress", "0");
-      carousel.removeAttribute("data-dragging");
-      carousel.removeAttribute("data-swipe");
-    }
+    const pointerId = activePointerId.current;
     startX.current = null;
     startY.current = null;
     activePointerId.current = null;
     gestureActive.current = false;
+    if (carousel) {
+      carousel.style.setProperty("--gesture-progress", "0");
+      carousel.removeAttribute("data-dragging");
+      carousel.removeAttribute("data-swipe");
+      if (pointerId !== null && carousel.hasPointerCapture(pointerId)) {
+        try {
+          carousel.releasePointerCapture(pointerId);
+        } catch {
+          // The browser may already have released capture after pointercancel.
+        }
+      }
+    }
   };
 
   const onCarouselPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!window.matchMedia("(max-width: 760px)").matches || event.pointerType === "mouse") return;
-    if ((event.target as HTMLElement).closest('[data-swipe-ignore="true"], a, button')) {
+    const target = event.target as HTMLElement;
+    const stageTab = target.closest(".stage-tab");
+    if (!stageTab && target.closest('[data-swipe-ignore="true"], a, button')) {
       suppressClick.current = false;
       return;
     }
-    if (event.clientX < 18 || event.clientX > window.innerWidth - 18) return;
+    if (event.clientX < 24 || event.clientX > window.innerWidth - 24) return;
     if (activePointerId.current !== null) return;
     suppressClick.current = false;
     activePointerId.current = event.pointerId;
@@ -382,30 +394,39 @@ export function EnteroPrototype({
     const dx = event.clientX - startX.current;
     const dy = event.clientY - startY.current;
     if (!gestureActive.current) {
-      if (Math.abs(dy) > 9 && Math.abs(dy) > Math.abs(dx) * 1.15) {
+      if (Math.abs(dy) >= 6 && Math.abs(dy) > Math.abs(dx) * 1.08) {
         resetSwipe();
         return;
       }
-      if (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(dy) * 0.82) return;
+      if (Math.abs(dx) < 6 || Math.abs(dx) <= Math.abs(dy) * 1.08) return;
       gestureActive.current = true;
       suppressClick.current = true;
-      event.currentTarget.setPointerCapture(event.pointerId);
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // Touch pointers are implicitly captured by modern mobile browsers.
+      }
       event.currentTarget.setAttribute("data-dragging", "true");
     }
-    const currentIndex = order.indexOf(activeId);
-    const atEdge = (currentIndex === 0 && dx > 0) || (currentIndex === order.length - 1 && dx < 0);
-    const resistance = atEdge ? 0.28 : 1;
-    const progress = Math.min(1, Math.abs(dx) * resistance / 72);
+    const progress = Math.min(1, Math.abs(dx) / 56);
     event.currentTarget.dataset.swipe = dx < 0 ? "next" : "previous";
     event.currentTarget.style.setProperty("--gesture-progress", progress.toFixed(3));
   };
 
   const onCarouselPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (activePointerId.current !== event.pointerId || startX.current === null) return;
+    if (
+      activePointerId.current !== event.pointerId
+      || startX.current === null
+      || startY.current === null
+    ) return;
     const dx = event.clientX - startX.current;
+    const dy = event.clientY - startY.current;
     const elapsed = Math.max(1, performance.now() - startTime.current);
     const velocity = Math.abs(dx) / elapsed;
-    if (gestureActive.current && (Math.abs(dx) >= 34 || (Math.abs(dx) >= 20 && velocity > 0.35))) {
+    const horizontalIntent = Math.abs(dx) > Math.abs(dy) * 1.08;
+    const completed = Math.abs(dx) >= 28 || (Math.abs(dx) >= 16 && velocity >= 0.28);
+    if (horizontalIntent && completed) {
+      suppressClick.current = true;
       move(dx < 0 ? 1 : -1);
     }
     resetSwipe();
@@ -441,6 +462,7 @@ export function EnteroPrototype({
         onPointerMove={onCarouselPointerMove}
         onPointerUp={onCarouselPointerUp}
         onPointerCancel={resetSwipe}
+        onLostPointerCapture={resetSwipe}
         onClickCapture={onCarouselClickCapture}
       >
       <section className="hero" id="stages" aria-labelledby="hero-title">

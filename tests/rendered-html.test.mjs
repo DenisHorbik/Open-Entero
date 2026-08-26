@@ -32,6 +32,7 @@ test("server-renders all ENTERO home stages with shared navigation and why secti
     assert.match(html, /Открываете ресторан/);
     assert.match(html, new RegExp(`data-stage="${stage}"`));
     assert.match(html, /href="\/services"/);
+    assert.match(html, /href="\/\?stage=idea"[^>]*>\s*<span>Главная<\/span>/);
     assert.match(html, /Каталог Entero/);
     assert.match(html, /Почему ENTERO/);
     assert.match(html, /Свяжитесь со мной/);
@@ -46,6 +47,7 @@ test("server-renders the services page from the shared stage content", async () 
   const html = await response.text();
 
   assert.match(html, /Услуги ENTERO/);
+  assert.match(html, /href="\/\?stage=idea"[^>]*>\s*<span>Главная<\/span>/);
   assert.match(html, /Помогаем пройти путь от идеи и бюджета/);
   assert.equal((html.match(/class="services-stage"/g) ?? []).length, 3);
   assert.equal((html.match(/class="services-stage-features"/g) ?? []).length, 3);

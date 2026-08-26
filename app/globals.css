@@ -1509,6 +1509,7 @@ button:focus-visible {
   .mobile-navigation[data-open="true"] .mobile-navigation-links a:nth-child(2) { transition-delay: 110ms; }
   .mobile-navigation[data-open="true"] .mobile-navigation-links a:nth-child(3) { transition-delay: 150ms; }
   .mobile-navigation[data-open="true"] .mobile-navigation-links a:nth-child(4) { transition-delay: 190ms; }
+  .mobile-navigation[data-open="true"] .mobile-navigation-links a:nth-child(5) { transition-delay: 230ms; }
   .mobile-navigation-contact {
     display: grid;
     gap: 13px;
@@ -1522,7 +1523,7 @@ button:focus-visible {
   .mobile-navigation[data-open="true"] .mobile-navigation-contact {
     opacity: 1;
     transform: translate3d(0, 0, 0);
-    transition-delay: 230ms;
+    transition-delay: 270ms;
   }
   .mobile-navigation-contact > p {
     margin: 0;

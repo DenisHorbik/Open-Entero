@@ -2,7 +2,7 @@
 
 import { ArrowRight, ShieldCheck } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { navigationItems } from "./navigation";
+import { mobileNavigationItems, navigationItems } from "./navigation";
 
 type MobileCta =
   | { label: string; href: string; onClick?: never }
@@ -129,7 +129,7 @@ export function SiteHeader({ currentPage = "home", mobileCta = defaultMobileCta 
         <div className="mobile-navigation-inner">
           <p className="mobile-menu-kicker" id="mobile-navigation-title">Навигация</p>
           <nav className="mobile-navigation-links" aria-label="Мобильная навигация">
-            {navigationItems.map((item) => (
+            {mobileNavigationItems.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
