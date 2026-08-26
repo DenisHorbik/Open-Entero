@@ -426,7 +426,7 @@ export function EnteroPrototype({
 
   return (
     <main className="site-shell">
-      <SiteHeader />
+      <SiteHeader mobileCta={{ label: active.primaryCta, onClick: openForm }} />
 
       <div
         ref={carouselRef}

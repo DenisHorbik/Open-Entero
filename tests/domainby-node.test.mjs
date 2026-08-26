@@ -81,9 +81,9 @@ test("Domain.by Node entrypoint serves HTML, assets and stage query state", asyn
     ]) {
       assert.match(servicesHtml, new RegExp(heading));
     }
-    assert.match(servicesHtml, /href="\/\?stage=idea#stage-detail"/);
-    assert.match(servicesHtml, /href="\/\?stage=space#stage-detail"/);
-    assert.match(servicesHtml, /href="\/\?stage=project#stage-detail"/);
+    assert.match(servicesHtml, /href="\/\?stage=idea&amp;form=contact"/);
+    assert.match(servicesHtml, /href="\/\?stage=space&amp;form=contact"/);
+    assert.match(servicesHtml, /href="\/\?stage=project&amp;form=contact"/);
     const stylesheetPath = html.match(/href="([^"]+\.css)"/)?.[1];
     assert.ok(stylesheetPath, "rendered HTML must include a stylesheet");
     const stylesheet = await fetch(`${origin}${stylesheetPath}`);

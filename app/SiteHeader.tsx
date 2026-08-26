@@ -1,38 +1,87 @@
 "use client";
 
-import { ArrowRight, ArrowUpRight, ShieldCheck } from "@phosphor-icons/react";
+import { ArrowRight, ShieldCheck } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { navigationItems } from "./navigation";
 
+type MobileCta =
+  | { label: string; href: string; onClick?: never }
+  | { label: string; href?: never; onClick: () => void };
+
 type SiteHeaderProps = {
   currentPage?: "home" | "services";
+  mobileCta?: MobileCta;
 };
 
-export function SiteHeader({ currentPage = "home" }: SiteHeaderProps) {
+const defaultMobileCta: MobileCta = {
+  label: "Обсудить задачу",
+  href: "/?stage=idea&form=contact",
+};
+
+export function SiteHeader({ currentPage = "home", mobileCta = defaultMobileCta }: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
-  const firstMobileLinkRef = useRef<HTMLAnchorElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!menuOpen) return;
-    firstMobileLinkRef.current?.focus();
+
+    const mobileMedia = window.matchMedia("(max-width: 760px)");
+    const menuButton = menuButtonRef.current;
+    const previousOverflow = document.body.style.overflow;
+    if (mobileMedia.matches) document.body.style.overflow = "hidden";
 
     const onPointerDown = (event: PointerEvent) => {
       if (!headerRef.current?.contains(event.target as Node)) setMenuOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMenuOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab" || !mobileMedia.matches) return;
+      const focusable = [
+        menuButton,
+        ...Array.from(
+          mobileMenuRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex="0"]') ?? [],
+        ),
+      ].filter((element): element is HTMLElement => Boolean(element));
+      if (!focusable.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
+    const onBreakpointChange = () => setMenuOpen(false);
 
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
+    mobileMedia.addEventListener("change", onBreakpointChange);
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
+      mobileMedia.removeEventListener("change", onBreakpointChange);
+      document.body.style.overflow = previousOverflow;
+      menuButton?.focus();
     };
   }, [menuOpen]);
 
   const wordmarkHref = currentPage === "home" ? "#stages" : "/";
+  const closeMenu = () => setMenuOpen(false);
+
+  const runMobileCta = () => {
+    closeMenu();
+    if (mobileCta.onClick) mobileCta.onClick();
+  };
 
   return (
     <header className="header" ref={headerRef} data-menu-open={menuOpen || undefined}>
@@ -55,6 +104,7 @@ export function SiteHeader({ currentPage = "home" }: SiteHeaderProps) {
         <span>16 лет в профессиональном<br />оснащении HoReCa</span>
       </div>
       <button
+        ref={menuButtonRef}
         className="menu-mark"
         type="button"
         aria-expanded={menuOpen}
@@ -66,33 +116,68 @@ export function SiteHeader({ currentPage = "home" }: SiteHeaderProps) {
         <span />
         <span />
       </button>
-      <nav
+      <div
         id="mobile-navigation"
         className="mobile-navigation"
-        aria-label="Мобильная навигация"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mobile-navigation-title"
         data-open={menuOpen || undefined}
         aria-hidden={!menuOpen}
+        ref={mobileMenuRef}
       >
-        {navigationItems.map((item, index) => (
-          <a
-            key={item.label}
-            ref={index === 0 ? firstMobileLinkRef : undefined}
-            href={item.href}
-            target={item.external ? "_blank" : undefined}
-            rel={item.external ? "noreferrer" : undefined}
-            aria-current={item.page === currentPage ? "page" : undefined}
-            tabIndex={menuOpen ? 0 : -1}
-            onClick={() => setMenuOpen(false)}
-          >
-            <span>{item.label}</span>
-            {item.external ? (
-              <ArrowUpRight size={20} weight="light" aria-hidden="true" />
+        <div className="mobile-navigation-inner">
+          <p className="mobile-menu-kicker" id="mobile-navigation-title">Навигация</p>
+          <nav className="mobile-navigation-links" aria-label="Мобильная навигация">
+            {navigationItems.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                target={item.external ? "_blank" : undefined}
+                rel={item.external ? "noreferrer" : undefined}
+                aria-current={item.page === currentPage ? "page" : undefined}
+                tabIndex={menuOpen ? 0 : -1}
+                onClick={closeMenu}
+              >
+                <span>{item.label}</span>
+              </a>
+            ))}
+          </nav>
+
+          <div className="mobile-navigation-contact">
+            <p>Связаться</p>
+            <a
+              className="mobile-navigation-phone"
+              href="tel:+375445002929"
+              tabIndex={menuOpen ? 0 : -1}
+              onClick={closeMenu}
+            >
+              +375 (44) 500-29-29
+            </a>
+            {mobileCta.href ? (
+              <a
+                className="mobile-navigation-cta"
+                href={mobileCta.href}
+                tabIndex={menuOpen ? 0 : -1}
+                onClick={closeMenu}
+              >
+                <span>{mobileCta.label}</span>
+                <ArrowRight size={24} weight="light" aria-hidden="true" />
+              </a>
             ) : (
-              <ArrowRight size={20} weight="light" aria-hidden="true" />
+              <button
+                className="mobile-navigation-cta"
+                type="button"
+                tabIndex={menuOpen ? 0 : -1}
+                onClick={runMobileCta}
+              >
+                <span>{mobileCta.label}</span>
+                <ArrowRight size={24} weight="light" aria-hidden="true" />
+              </button>
             )}
-          </a>
-        ))}
-      </nav>
+          </div>
+        </div>
+      </div>
     </header>
   );
 }
