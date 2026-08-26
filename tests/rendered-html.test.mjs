@@ -84,7 +84,8 @@ test("server-renders the stage-aware thanks page", async () => {
   assert.match(html, /ENTERO · Ваш запрос отправлен/);
   assert.match(html, /Свяжемся с Вами в течение 1 рабочего дня/);
   assert.match(html, /href="tel:\+375445002929"/);
-  assert.match(html, /https:\/\/t\.me\/EnteroMinsk/);
+  assert.match(html, /https:\/\/t\.me\/EnteroMinsk\?text=/);
   assert.match(html, /viber:\/\/chat\?number=%2B375445002929/);
+  assert.match(html, /class="thanks-copy-status"/);
   assert.match(html, /Демо-режим — заявка и новый файл пока не отправляются/);
 });

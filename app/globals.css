@@ -2202,6 +2202,14 @@ button:focus-visible {
 .thanks-phone-link:hover { text-decoration-color: currentColor; }
 .thanks-phone-link:focus-visible { outline: 1px solid var(--gold-light); outline-offset: 4px; border-radius: 2px; }
 .thanks-messengers { display: flex; gap: 12px; margin-top: 35px; }
+.thanks-copy-status {
+  max-width: 520px;
+  margin: 10px 0 0;
+  color: #a9a49b;
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+.thanks-copy-status:empty { display: none; }
 .thanks-messengers a,
 .thanks-return {
   display: inline-flex;
