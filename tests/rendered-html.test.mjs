@@ -84,6 +84,7 @@ test("server-renders the stage-aware thanks page", async () => {
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /Спасибо\. Мы получили ваши вводные/);
+  assert.match(html, /class="wordmark" href="\/"/);
   assert.match(html, /ENTERO · Ваш запрос отправлен/);
   assert.match(html, /Свяжемся с Вами в течение 1 рабочего дня/);
   assert.match(html, /href="tel:\+375445002929"/);

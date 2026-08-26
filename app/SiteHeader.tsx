@@ -11,6 +11,7 @@ type MobileCta =
 type SiteHeaderProps = {
   currentPage?: "home" | "services";
   mobileCta?: MobileCta;
+  wordmarkHref?: string;
 };
 
 const defaultMobileCta: MobileCta = {
@@ -18,7 +19,11 @@ const defaultMobileCta: MobileCta = {
   href: "/?stage=idea&form=contact",
 };
 
-export function SiteHeader({ currentPage = "home", mobileCta = defaultMobileCta }: SiteHeaderProps) {
+export function SiteHeader({
+  currentPage = "home",
+  mobileCta = defaultMobileCta,
+  wordmarkHref,
+}: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -75,7 +80,7 @@ export function SiteHeader({ currentPage = "home", mobileCta = defaultMobileCta 
     };
   }, [menuOpen]);
 
-  const wordmarkHref = currentPage === "home" ? "#stages" : "/";
+  const resolvedWordmarkHref = wordmarkHref ?? (currentPage === "home" ? "#stages" : "/");
   const closeMenu = () => setMenuOpen(false);
 
   const runMobileCta = () => {
@@ -85,7 +90,7 @@ export function SiteHeader({ currentPage = "home", mobileCta = defaultMobileCta 
 
   return (
     <header className="header" ref={headerRef} data-menu-open={menuOpen || undefined}>
-      <a className="wordmark" href={wordmarkHref} aria-label="ENTERO, начало страницы">ENTERO</a>
+      <a className="wordmark" href={resolvedWordmarkHref} aria-label="ENTERO, начало страницы">ENTERO</a>
       <nav className="desktop-navigation" aria-label="Основная навигация">
         {navigationItems.map((item) => (
           <a

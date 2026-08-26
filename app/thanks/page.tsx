@@ -22,7 +22,7 @@ export default async function ThanksPage({
   const params = await searchParams;
   return (
     <main className="site-shell thanks-page">
-      <SiteHeader />
+      <SiteHeader wordmarkHref="/" />
       <ThankYouClient stage={parseStage(params.stage)} />
       <SiteFooter />
     </main>
