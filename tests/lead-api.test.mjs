@@ -96,7 +96,7 @@ function leadForm(requestId, overrides = {}) {
   const form = new FormData();
   const values = {
     stage: "idea",
-    phone: "+375 44 700-51-11",
+    phone: "+375447005111",
     contactMethod: "telegram",
     venueType: "restaurant",
     name: "TEST Денис",
@@ -114,6 +114,7 @@ function leadForm(requestId, overrides = {}) {
   };
   form.set("idempotencyKey", requestId);
   for (const [key, value] of Object.entries(values)) form.set(key, value);
+  form.set("recaptchaToken", "test-pass");
   form.set("file", new File(["test specification"], "test-specification.pdf", { type: "application/pdf" }));
   return form;
 }
@@ -137,6 +138,8 @@ test("lead API creates Company + Deal, reuses an existing company and supports l
       BITRIX24_DEAL_STAGE_ID: "NEW",
       BITRIX24_SOURCE_ID: "WEB",
       LEAD_UPLOAD_SECRET: "test-only-secret-that-is-longer-than-thirty-two-characters",
+      RECAPTCHA_TEST_MODE: "1",
+      RECAPTCHA_MODE: "observe",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -172,6 +175,7 @@ test("lead API creates Company + Deal, reuses an existing company and supports l
     assert.equal(mock.state.deals[0].fields.ASSIGNED_BY_ID, undefined);
     assert.equal(mock.state.comments.length, 1);
     assert.equal(mock.state.comments[0].fields.FILES[0][0], "test-specification.pdf");
+    assert.match(mock.state.deals[0].fields.COMMENTS, /reCAPTCHA v3: passed \(score 0\.90\)/);
 
     const repeated = await fetch(`${origin}/api/leads`, {
       method: "POST",
@@ -208,6 +212,24 @@ test("lead API creates Company + Deal, reuses an existing company and supports l
     assert.equal(existingDeal.ASSIGNED_BY_ID, 9);
     assert.equal(existingDeal.SOURCE_DESCRIPTION, "open.entero.by:existing-company");
     assert.match(existingDeal.COMMENTS, /Найдено компаний с таким телефоном: 2/);
+
+    mock.state.mode = "new";
+    const international = await fetch(`${origin}/api/leads`, {
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.14" },
+      body: leadForm("request-kz-0001", { phone: "+77011234567" }),
+    });
+    assert.equal(international.status, 200);
+    assert.equal((await international.json()).ok, true);
+    assert.equal(mock.state.companies.at(-1).fields.PHONE[0].VALUE, "+77011234567");
+
+    const invalidPhone = await fetch(`${origin}/api/leads`, {
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.15" },
+      body: leadForm("request-invalid-phone-0001", { phone: "+37544ABC5111" }),
+    });
+    assert.equal(invalidPhone.status, 400);
+    assert.equal((await invalidPhone.json()).code, "validation");
   } finally {
     if (child.exitCode === null) {
       child.kill("SIGTERM");

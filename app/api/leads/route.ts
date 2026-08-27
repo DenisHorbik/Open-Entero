@@ -2,6 +2,7 @@ import { createCrmLead } from "../../lib/bitrix24";
 import { createUploadToken } from "../../lib/lead-security";
 import { LeadValidationError, validateLeadForm } from "../../lib/lead-validation";
 import type { CrmLeadResult, ValidatedLead } from "../../lib/bitrix24";
+import { assessRecaptcha } from "../../lib/recaptcha";
 
 const attempts = new Map<string, number[]>();
 const WINDOW_MS = 10 * 60 * 1000;
@@ -43,7 +44,15 @@ export async function POST(request: Request) {
   try {
     const lead = validateLeadForm(await request.formData());
     if ("honeypot" in lead) return json({ ok: true, requestId: lead.requestId, uploadToken: "" });
-    const result = await createLeadOnce(lead);
+    const captcha = await assessRecaptcha(lead.recaptchaToken, clientIp(request));
+    if (process.env.RECAPTCHA_MODE === "enforce" && captcha.status !== "passed") {
+      return json({
+        ok: false,
+        code: "validation",
+        message: "Не удалось подтвердить отправку. Обновите страницу и попробуйте ещё раз.",
+      }, 400);
+    }
+    const result = await createLeadOnce({ ...lead, captcha });
     return json({
       ok: true,
       requestId: lead.requestId,

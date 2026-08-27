@@ -23,6 +23,7 @@ export type LeadDraft = {
   website?: string;
   attribution: LeadAttribution;
   file?: File | null;
+  recaptchaToken?: string;
 };
 
 export type LeadSubmitSuccess = {
@@ -90,18 +91,6 @@ export function isValidLeadFile(file: File) {
   return Boolean(extension && ["pdf", "xls", "xlsx", "doc", "docx", "jpg", "jpeg", "png"].includes(extension));
 }
 
-export function isValidBelarusPhone(value: string) {
-  return normalizeBelarusPhone(value) !== null;
-}
-
-export function normalizeBelarusPhone(value: string) {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length === 9) return `+375${digits}`;
-  if (digits.length === 11 && digits.startsWith("80")) return `+375${digits.slice(2)}`;
-  if (digits.length === 12 && digits.startsWith("375")) return `+${digits}`;
-  return null;
-}
-
 export async function submitLead(draft: LeadDraft): Promise<LeadSubmitSuccess> {
   const body = new FormData();
   body.set("idempotencyKey", draft.idempotencyKey);
@@ -112,6 +101,7 @@ export async function submitLead(draft: LeadDraft): Promise<LeadSubmitSuccess> {
   body.set("name", draft.name);
   body.set("website", draft.website || "");
   body.set("attribution", JSON.stringify(draft.attribution));
+  body.set("recaptchaToken", draft.recaptchaToken || "");
   if (draft.file) body.set("file", draft.file);
 
   let response: Response;

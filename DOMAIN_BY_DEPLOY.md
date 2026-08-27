@@ -21,9 +21,15 @@ BITRIX24_DEAL_CATEGORY_ID=0
 BITRIX24_DEAL_STAGE_ID=NEW
 BITRIX24_SOURCE_ID=WEB
 LEAD_UPLOAD_SECRET=<random secret of at least 32 characters>
+RECAPTCHA_SECRET_KEY=<Google reCAPTCHA v3 secret key>
+RECAPTCHA_MODE=observe
+RECAPTCHA_SCORE_THRESHOLD=0.5
+RECAPTCHA_ALLOWED_HOSTNAMES=open.entero.by
 ```
 
 `BITRIX24_WEBHOOK_URL` must use HTTPS. `LEAD_UPLOAD_SECRET` signs the short-lived token used when a visitor adds a document on the thank-you page. Restart only the `open.entero.by` Node.js application after changing these values.
+
+`RECAPTCHA_MODE=observe` never blocks a valid lead because of a low score or a temporary Google failure. The assessment is written to the Bitrix24 deal comment. Switch to `enforce` only after enough live traffic has been reviewed and the threshold has been approved.
 
 On Domain.by these values are stored in `/www/open.entero.by/crm-config.txt`.
 The generated `server.js` loads that file before starting the application. The

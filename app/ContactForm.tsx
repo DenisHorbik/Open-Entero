@@ -6,7 +6,6 @@ import type { StageId } from "./entero-content";
 import { collectLeadAttribution } from "./lead-attribution";
 import {
   contactMethods,
-  isValidBelarusPhone,
   isValidLeadFile,
   LeadDeliveryError,
   LEAD_FILE_ACCEPT,
@@ -17,11 +16,14 @@ import {
   type ContactMethod,
   type VenueType,
 } from "./lead-preview";
+import { sanitizePhoneInput } from "./lib/phone";
+import { getRecaptchaToken, preloadRecaptcha } from "./lib/recaptcha-client";
 
 type ContactFormProps = {
   open: boolean;
   stage: StageId;
   onClose: () => void;
+  recaptchaSiteKey: string;
 };
 
 const STORAGE_KEY = "entero-contact-draft";
@@ -40,14 +42,14 @@ function readSavedDraft() {
   }
 }
 
-export function ContactForm({ open, stage, onClose }: ContactFormProps) {
+export function ContactForm({ open, stage, onClose, recaptchaSiteKey }: ContactFormProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const idempotencyKeyRef = useRef<string | null>(null);
   const [savedDraft] = useState(readSavedDraft);
-  const [phone, setPhone] = useState(savedDraft?.phone ?? "+375 ");
+  const [phone, setPhone] = useState(() => sanitizePhoneInput(savedDraft?.phone ?? "+375"));
   const [name, setName] = useState(savedDraft?.name ?? "");
   const [contactMethod, setContactMethod] = useState<ContactMethod>(savedDraft?.contactMethod ?? "phone");
   const [venueType, setVenueType] = useState<VenueType>(savedDraft?.venueType ?? "unsure");
@@ -58,6 +60,11 @@ export function ContactForm({ open, stage, onClose }: ContactFormProps) {
   const [website, setWebsite] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const copy = stageFormCopy[stage];
+
+  useEffect(() => {
+    if (!open) return;
+    void preloadRecaptcha(recaptchaSiteKey).catch(() => undefined);
+  }, [open, recaptchaSiteKey]);
 
   useEffect(() => {
     try {
@@ -131,8 +138,10 @@ export function ContactForm({ open, stage, onClose }: ContactFormProps) {
     event.preventDefault();
     setPhoneError("");
     setSubmitError("");
-    if (!isValidBelarusPhone(phone)) {
-      setPhoneError("Укажите номер телефона, по которому мы сможем связаться.");
+    const { normalizeInternationalPhone } = await import("./lib/phone-validation");
+    const normalizedPhone = normalizeInternationalPhone(phone);
+    if (!normalizedPhone) {
+      setPhoneError("Введите полный номер с кодом страны, например +375445002929.");
       return;
     }
     setSubmitting(true);
@@ -140,16 +149,18 @@ export function ContactForm({ open, stage, onClose }: ContactFormProps) {
       idempotencyKeyRef.current ||= typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
         : `lead-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const recaptchaToken = await getRecaptchaToken(recaptchaSiteKey, "lead_submit");
       const result = await submitLead({
         idempotencyKey: idempotencyKeyRef.current,
         stage,
-        phone,
+        phone: normalizedPhone,
         contactMethod,
         venueType,
         name,
         website,
         attribution: collectLeadAttribution(stage),
         file,
+        recaptchaToken,
       });
       sessionStorage.setItem("entero-thanks-context", JSON.stringify({
         requestId: result.requestId,
@@ -157,7 +168,7 @@ export function ContactForm({ open, stage, onClose }: ContactFormProps) {
         fileWarning: result.fileWarning,
         stage,
       }));
-      window.location.assign(`/thanks?stage=${stage}`);
+      window.location.assign("/thanks");
     } catch (error) {
       setSubmitError(error instanceof LeadDeliveryError
         ? error.message
@@ -201,10 +212,14 @@ export function ContactForm({ open, stage, onClose }: ContactFormProps) {
               inputMode="tel"
               autoComplete="tel"
               value={phone}
+              maxLength={16}
               aria-invalid={Boolean(phoneError)}
               aria-describedby={phoneError ? "lead-phone-error" : undefined}
-              onChange={(event) => setPhone(event.target.value)}
-              placeholder="+375 44 500-29-29"
+              onChange={(event) => {
+                setPhone(sanitizePhoneInput(event.target.value));
+                if (phoneError) setPhoneError("");
+              }}
+              placeholder="+375445002929"
             />
             {phoneError && <p className="lead-error" id="lead-phone-error">{phoneError}</p>}
           </div>

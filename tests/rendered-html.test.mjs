@@ -38,6 +38,9 @@ test("server-renders all ENTERO home stages with shared navigation and why secti
     assert.match(html, /Свяжитесь со мной/);
     assert.match(html, /Знаем оборудование, рынок и реальные условия поставки/);
     assert.match(html, /id="contacts"/);
+    assert.match(html, /GTM-NB8M8MDJ/);
+    assert.match(html, /href="\/favicon\.svg"/);
+    assert.match(html, /6Lc6KpstAAAAAN5LtHEWMbjVZJkVTTMJyctNR4qS/);
   }
 });
 
@@ -87,8 +90,8 @@ test("server-renders the stage-specific one-step contact form on direct entry", 
   }
 });
 
-test("server-renders the stage-aware thanks page", async () => {
-  const response = await render("/thanks?stage=project");
+test("server-renders the clean thanks page", async () => {
+  const response = await render("/thanks");
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /Спасибо\. Мы получили ваши вводные/);

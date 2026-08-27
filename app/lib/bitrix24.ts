@@ -1,6 +1,7 @@
 import type { StageId } from "../entero-content";
 import { stageFormCopy, venueTypes, type ContactMethod, type VenueType } from "../lead-preview";
 import type { LeadAttribution } from "../lead-attribution";
+import type { RecaptchaAssessment } from "./recaptcha";
 
 type BitrixResponse<T> = { result?: T; error?: string; error_description?: string };
 
@@ -18,6 +19,8 @@ export type ValidatedLead = {
   contactMethod: ContactMethod;
   venueType: VenueType;
   name: string;
+  recaptchaToken: string;
+  captcha?: RecaptchaAssessment;
   attribution: LeadAttribution;
   file: File | null;
 };
@@ -101,6 +104,7 @@ function trimmed(value: string | undefined, max = 500) {
 
 function dealComment(lead: ValidatedLead, companyMatchCount: number) {
   const a = lead.attribution;
+  const captcha = lead.captcha;
   return [
     "Заявка с open.entero.by",
     `Форма: ${stageFormCopy[lead.stage].title}`,
@@ -123,6 +127,7 @@ function dealComment(lead: ValidatedLead, companyMatchCount: number) {
     `YCLID: ${trimmed(a.yclid) || "—"}`,
     `YMCLID: ${trimmed(a.ymclid) || "—"}`,
     `Эксперимент: ${a.concept} / ${a.theme} / ${a.heroVariant}`,
+    `reCAPTCHA v3: ${captcha?.status || "не проверялась"}${typeof captcha?.score === "number" ? ` (score ${captcha.score.toFixed(2)})` : ""}`,
     `ID заявки: ${lead.requestId}`,
   ].filter(Boolean).join("\n");
 }

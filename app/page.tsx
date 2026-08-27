@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { EnteroPrototype } from "./EnteroPrototype";
 import type { StageId } from "./entero-content";
 import { siteUrl } from "./seo-config";
+import { publicSiteConfig } from "./public-site-config";
 
 export const metadata: Metadata = {
   title: "ENTERO | Открываете ресторан?",
@@ -22,5 +23,11 @@ export default async function Home({
 }) {
   const params = await searchParams;
   const form = Array.isArray(params.form) ? params.form[0] : params.form;
-  return <EnteroPrototype initialStage={parseStage(params.stage)} initialFormOpen={form === "contact"} />;
+  return (
+    <EnteroPrototype
+      initialStage={parseStage(params.stage)}
+      initialFormOpen={form === "contact"}
+      recaptchaSiteKey={publicSiteConfig.recaptchaSiteKey}
+    />
+  );
 }

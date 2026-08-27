@@ -38,9 +38,11 @@ type GestureSource = "pointer" | "touch";
 export function EnteroPrototype({
   initialStage,
   initialFormOpen = false,
+  recaptchaSiteKey,
 }: {
   initialStage: StageId;
   initialFormOpen?: boolean;
+  recaptchaSiteKey: string;
 }) {
   const [activeId, setActiveId] = useState<StageId>(initialStage);
   const [requestedId, setRequestedId] = useState<StageId>(initialStage);
@@ -683,7 +685,12 @@ export function EnteroPrototype({
       </div>
       <WhyEntero />
       <SiteFooter />
-      <ContactForm open={formOpen} stage={active.id} onClose={closeForm} />
+      <ContactForm
+        open={formOpen}
+        stage={active.id}
+        onClose={closeForm}
+        recaptchaSiteKey={recaptchaSiteKey}
+      />
     </main>
   );
 }

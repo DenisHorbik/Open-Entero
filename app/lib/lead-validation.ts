@@ -1,12 +1,11 @@
 import type { StageId } from "../entero-content";
 import {
-  isValidBelarusPhone,
   isValidLeadFile,
   MAX_LEAD_FILE_SIZE,
-  normalizeBelarusPhone,
   type ContactMethod,
   type VenueType,
 } from "../lead-preview";
+import { normalizeInternationalPhone } from "./phone-validation";
 import type { LeadAttribution } from "../lead-attribution";
 import type { ValidatedLead } from "./bitrix24";
 
@@ -62,9 +61,11 @@ export function validateLeadForm(formData: FormData): ValidatedLead | { honeypot
   const venueType = field(formData, "venueType", 30) as VenueType;
   const name = field(formData, "name", 100);
   if (!stages.has(stage)) throw new LeadValidationError("Не определена стадия проекта.");
-  if (!isValidBelarusPhone(phoneInput)) throw new LeadValidationError("Укажите номер телефона, по которому мы сможем связаться.");
-  const phone = normalizeBelarusPhone(phoneInput);
-  if (!phone) throw new LeadValidationError("Укажите белорусский номер телефона в формате +375.");
+  if (!/^\+\d{7,15}$/.test(phoneInput)) {
+    throw new LeadValidationError("Телефон должен содержать только знак +, код страны и цифры.");
+  }
+  const phone = normalizeInternationalPhone(phoneInput);
+  if (!phone) throw new LeadValidationError("Введите полный номер с кодом страны, например +375445002929.");
   if (!contactMethods.has(contactMethod)) throw new LeadValidationError("Выберите удобный способ связи.");
   if (!venueTypes.has(venueType)) throw new LeadValidationError("Выберите тип объекта.");
 
@@ -81,6 +82,7 @@ export function validateLeadForm(formData: FormData): ValidatedLead | { honeypot
     contactMethod,
     venueType,
     name,
+    recaptchaToken: field(formData, "recaptchaToken", 4096),
     file,
     attribution: parseAttribution(field(formData, "attribution", 10_000), stage),
   };

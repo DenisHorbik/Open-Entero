@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, CheckCircle, Paperclip } from "@phosphor-icons/react";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { StageId } from "../entero-content";
 import {
   isValidLeadFile,
@@ -85,7 +85,7 @@ function copyWithFallback(text: string) {
   return copied;
 }
 
-export function ThankYouClient({ stage }: { stage: StageId }) {
+export function ThankYouClient() {
   const serializedDraft = useSyncExternalStore(
     subscribeToContactDraft,
     getContactDraftSnapshot,
@@ -98,6 +98,9 @@ export function ThankYouClient({ stage }: { stage: StageId }) {
   );
   const contactDraft = useMemo(() => readContactDraft(serializedDraft), [serializedDraft]);
   const thanksContext = useMemo(() => readThanksContext(serializedThanksContext), [serializedThanksContext]);
+  const stage = thanksContext?.stage === "space" || thanksContext?.stage === "project"
+    ? thanksContext.stage
+    : "idea";
   const [fileName, setFileName] = useState("");
   const [fileError, setFileError] = useState("");
   const [fileStatus, setFileStatus] = useState("");
@@ -105,6 +108,10 @@ export function ThankYouClient({ stage }: { stage: StageId }) {
   const [viberStatus, setViberStatus] = useState("");
   const messengerMessage = buildMessengerMessage(stage, contactDraft);
   const telegramHref = `https://t.me/EnteroMinsk?text=${encodeURIComponent(messengerMessage)}`;
+
+  useEffect(() => {
+    if (window.location.search) window.history.replaceState({}, "", "/thanks");
+  }, []);
 
   const handleFile = async (file: File | null) => {
     setFileName("");

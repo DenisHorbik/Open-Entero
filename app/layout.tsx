@@ -1,5 +1,7 @@
+/* eslint-disable @next/next/next-script-for-ga -- The supplied GTM container uses Google's standard head + noscript installation. */
 import type { Metadata } from "next";
 import { jsonLd, siteIndexable, siteUrl } from "./seo-config";
+import { publicSiteConfig } from "./public-site-config";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,6 +12,7 @@ export const metadata: Metadata = {
   robots: siteIndexable
     ? { index: true, follow: true }
     : { index: false, follow: false },
+  icons: { icon: "/favicon.svg" },
 };
 
 const organizationSchema = {
@@ -51,8 +54,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(organizationSchema) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(websiteSchema) }} />
+        <script
+          id="google-tag-manager"
+          dangerouslySetInnerHTML={{
+            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${publicSiteConfig.gtmContainerId}');`,
+          }}
+        />
       </head>
-      <body>{children}</body>
+      <body>
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${publicSiteConfig.gtmContainerId}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+            title="Google Tag Manager"
+          />
+        </noscript>
+        {children}
+      </body>
     </html>
   );
 }
